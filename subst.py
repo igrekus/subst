@@ -8,7 +8,7 @@ setOutDir(__name__)
 def main():
     app = QApplication(sys.argv)
     w = MainWindow()
-    # w.initApp()
+    w.initApp()
     # w.showMaximized()
     w.show()
     sys.exit(app.exec_())

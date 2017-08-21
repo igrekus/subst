@@ -3,8 +3,13 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QAbstractItemView, QAction, QMessageBox, QApplication, QTableView
 from PyQt5.QtCore import Qt, QSortFilterProxyModel, QItemSelectionModel, QDate
 
+from domainmodel import DomainModel
+from mysqlengine import MysqlEngine
+from persistencefacade import PersistenceFacade
+
 
 class MainWindow(QMainWindow):
+
     def __init__(self, parent=None):
         # TODO !!! use dict.get(key, default) !!!
         super(MainWindow, self).__init__(parent)
@@ -27,16 +32,16 @@ class MainWindow(QMainWindow):
 
         # # persistence engine
         # # self._persistenceEngine = CsvEngine(parent=self)
-        # self._persistenceEngine = SqliteEngine(parent=self)
+        self._persistenceEngine = MysqlEngine(parent=self)
         #
         # # facades
-        # self._persistenceFacade = PersistenceFacade(parent=self, persistenceEngine=self._persistenceEngine)
+        self._persistenceFacade = PersistenceFacade(parent=self, persistenceEngine=self._persistenceEngine)
         # self._uiFacade = UiFacade(parent=self, reportManager=self._reportManager)
         #
-        # # models
-        # # domain
-        # self._modelDomain = DomainModel(parent=self, persistenceFacade=self._persistenceFacade)
-        #
+        # models
+        # domain
+        self._modelDomain = DomainModel(parent=self, persistenceFacade=self._persistenceFacade)
+
         # # bill list + search proxy
         # self._modelBillList = BillTableModel(parent=self, domainModel=self._modelDomain)
         # self._modelBillSearchProxy = BillSearchProxyModel(parent=self)
@@ -60,14 +65,18 @@ class MainWindow(QMainWindow):
         # self.actPrint = QAction("Распечатать...", self)
         # self.actOpenDictEditor = QAction("Словари", self)
 
-    # def initApp(self):
-    #     # init instances
-    #     # self._persistenceEngine.initEngine(fileName="ref/1.csv")
-    #     self._persistenceEngine.initEngine(fileName="sqlite3.db")
-    #     self._persistenceFacade.initFacade()
-    #     # self._uiFacade.initFacade()
-    #     self._modelDomain.initModel()
-    #     self._modelDomain.buildPlanData()
+    def initApp(self):
+        # init instances
+        # engines
+        self._persistenceEngine.initEngine()
+
+        # facades
+        self._persistenceFacade.initFacade()
+        # self._uiFacade.initFacade()
+
+        # models
+        self._modelDomain.initModel()
+
     #     self._modelBillList.initModel()
     #     self._modelBillPlan.initModel()
     #
