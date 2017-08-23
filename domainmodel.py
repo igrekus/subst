@@ -1,5 +1,7 @@
 from PyQt5.QtCore import QObject, QModelIndex, pyqtSignal, QDate
 
+from mapmodel import MapModel
+
 
 class DomainModel(QObject):
 
@@ -22,49 +24,34 @@ class DomainModel(QObject):
         super(DomainModel, self).__init__(parent)
 
         self._persistenceFacade = persistenceFacade
-        self.importDeviceList = list()
-        self.homebrewDeviceList = list()
-        self.importToHomebrew = list()
-        self.homebrewToImport = list()
+
+        self.importDeviceList = dict()
+        self.homebrewDeviceList = dict()
+        self.importToHomebrew = dict()
+        self.homebrewToImport = dict()
+
+        self.vendorList = dict()
 
     def initModel(self):
         print("init domain model")
 
-        # self.dicts = self._persistenceFacade.fetchDicts(self.dict_list)
-
-        self.importDeviceList, self.homebrewDeviceList = self._persistenceFacade.getDeviceList()
-
+        self.deviceList = self._persistenceFacade.getDeviceList()
         self.importToHomebrew, self.homebrewToImport = self._persistenceFacade.getSubstMap()
+        self.vendorList = self._persistenceFacade.getVendorDict()
 
-    def importListRowCount(self):
-        return len(self.importToHomebrew.keys())
+        self.deviceMapModel = MapModel(self, {k: v.item_name for k, v in self.deviceList.items()})
 
-    def importItemRowCount(self, parentId):
-        if parentId in self.importToHomebrew:
-            return len(self.importToHomebrew[parentId])
-        else:
-            return 0
+        self.vendorMapModel = MapModel(self, {k: v[0] for k, v in self.vendorList.items()})
 
-    def getHomebrewItemById(self, id_):
-        for i in self.homebrewDeviceList:
-            if i.item_id == id_:
-                return i
-        return None
+    def getItemById(self, id_):
+        return self.deviceList[id_]
 
-    def getImportItemById(self, id_):
-        for i in self.importDeviceList:
-            if i.item_id == id_:
-                return i
-        return None
-
-    def getImportItemAtRow(self, row):
-        return self.importDeviceList[row]
-
-    def getHomebrewItemAtRowForParent(self, parentId, row):
-        return self.getHomebrewItemById(self.importToHomebrew[parentId][row])
-
-    def getHomebrewItemListByParentId(self, parentId):
-        return [self.getHomebrewItemById(i) for i in self.importToHomebrew[parentId]]
+    def getVendorById(self, id_):
+        """
+        :param id_: int 
+        :return: list(name: str, origin: int) 
+        """
+        return self.vendorList[id_]
 
     # def refreshPlanData(self):
     #     if self._rawPlanData:

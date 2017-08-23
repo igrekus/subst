@@ -5,10 +5,12 @@ from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant
 
 
 class MapModel(QAbstractListModel):
+
     def __init__(self, parent=None, data=None):
         super(MapModel, self).__init__(parent)
         self.mapData = dict()
         self.strList = list()
+
         if data is not None:
             self.initModel(data)
 
@@ -21,7 +23,12 @@ class MapModel(QAbstractListModel):
         self.strList = list(sorted(self.mapData.values()))
         self.endInsertRows()
 
-        self.addItemAtPosition(0, 0, "Все")
+    def copyItems(self, model: dict):
+        self.beginResetModel()
+        for k, v in model.mapData.items():
+            self.mapData[k] = v
+        self.strList = list(sorted(self.mapData.values()))
+        self.endResetModel()
 
     def clear(self):
         self.beginRemoveRows(QModelIndex(), 0, len(self.mapData) - 1)
@@ -92,19 +99,3 @@ class MapModel(QAbstractListModel):
 
     def getData(self, id_=None):
         return self.mapData[id_]
-
-#     void
-#     MapModel::removeItem(const
-#     qint32
-#     id)
-#     {
-#         qint32
-#     row = m_strList.indexOf(m_mapData.id.value(id));
-#
-#     m_mapData.di.remove(m_mapData.id.value(id));
-#     m_mapData.id.remove(id);
-#
-#     beginRemoveRows(QModelIndex(), row, row);
-#     m_strList.removeAt(row);
-#     endRemoveRows();
-#     }

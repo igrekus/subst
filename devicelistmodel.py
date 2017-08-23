@@ -28,9 +28,9 @@ class TreeNode(object):
             return self.parentNode.childItems.index(self)
         return 0
 
-    @classmethod
-    def makeNode(cls, data, parent):
-        return cls(data, parent)
+    def __str__(self):
+        return "TreeNode(data:" + str(self.data) + " parent:" + str(id(self.parentNode)) + " children:" + str(
+            len(self.childNodes)) + ")"
 
 class DeviceListModel(QAbstractItemModel):
 
@@ -42,7 +42,7 @@ class DeviceListModel(QAbstractItemModel):
     ColumnTags = ColumnSpec + 1
     ColumnCount = ColumnTags + 1
 
-    _headers = ["Каталог", "Наименование", "Производитель", "Описание", "Характеристики", "Теги"]
+    _headers = ["Каталог", "Индекс", "Производитель", "Описание", "Характеристики", "Теги"]
 
     def __init__(self, parent=None, domainModel=None):
         super(DeviceListModel, self).__init__(parent)
@@ -51,17 +51,40 @@ class DeviceListModel(QAbstractItemModel):
         self.rootNode = TreeNode(None, None)
 
     def clear(self):
-        pass
 
-    def buildNode(self, root, data):
-        for d in data:
-            node = TreeNode(d, root)
-            self.buildNode(node, self._modelDomain.getHomebrewItemListByParentId(d.item_id))
-            root.appendChild(node)
+        def clearTreeNode(node):
+            if node.childNodes:
+                for n in node.childNodes:
+                    clearTreeNode(n)
+            node.childNodes.clear()
 
-    def initModel(self):
+        clearTreeNode(self.rootNode)
+
+    def buildFirstLevel(self, data, origin):
+        for k, v in data.items():
+            if v.item_origin == origin:
+                self.rootNode.appendChild(TreeNode(k, self.rootNode))
+
+    def buildSecondLevel(self, mapping):
+        for n in self.rootNode.childNodes:
+            for i in mapping[n.data]:
+                n.appendChild(TreeNode(self._modelDomain.getItemById(i).item_id, n))
+
+    def buildImportToHomebrewTree(self):
+        self.buildFirstLevel(data=self._modelDomain.deviceList, origin=1)
+        self.buildSecondLevel(mapping=self._modelDomain.importToHomebrew)
+
+    def buildHomebrewToImportTree(self):
+        self.buildFirstLevel(data=self._modelDomain.homebrewDeviceList, origin=2)
+        self.buildSecondLevel(mapping=self._modelDomain.homebrewToImport)
+
+    def initModel(self, buildFunc):
         print("init tree model")
-        self.buildNode(self.rootNode, self._modelDomain.importDeviceList)
+        self.beginResetModel()
+        self.clear()
+        self.rootNode = TreeNode(None, None)
+        buildFunc()
+        self.endResetModel()
 
     def headerData(self, section, orientation, role=None):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole and section < len(self._headers):
@@ -123,26 +146,24 @@ class DeviceListModel(QAbstractItemModel):
             return QVariant()
 
         col = index.column()
-        row = index.row()
 
-        item = index.internalPointer()
+        item = self._modelDomain.getItemById(index.internalPointer().data)
 
         if role == Qt.DisplayRole or role == Qt.ToolTipRole:
             if col == self.ColumnId:
-                return QVariant(item.data.item_id)
+                return QVariant(item.item_name)
             elif col == self.ColumnName:
-                return QVariant(item.data.item_name)
+                return QVariant(item.item_id)
             elif col == self.ColumnVendor:
-                return QVariant(item.data.item_vendor)
+                return QVariant(self._modelDomain.getVendorById(item.item_vendor)[0])
             elif col == self.ColumnDescription:
-                return QVariant(item.data.item_desc)
+                return QVariant(item.item_desc)
             elif col == self.ColumnSpec:
-                return QVariant(item.data.item_spec)
+                return QVariant(item.item_spec)
             elif col == self.ColumnTags:
-                return QVariant(item.data.item_tags)
+                return QVariant(item.item_tags)
 
         # elif role == Qt.BackgroundRole:
-        #     # FIXME hardcoded ids for coloring - add color codes to SQL table?
         #     retcolor = Qt.white;
         #
         #     if item.item_status == 1:
@@ -169,7 +190,7 @@ class DeviceListModel(QAbstractItemModel):
         #     return QVariant(QBrush(QColor(retcolor)))
 
         elif role == const.RoleNodeId:
-            return QVariant(item.data.item_id)
+            return QVariant(item.item_id)
 
         return QVariant()
 

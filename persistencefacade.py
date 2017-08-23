@@ -17,10 +17,7 @@ class PersistenceFacade(QObject):
         print("init persistence facade:", self._engine.engineType)
 
     def getDeviceList(self):
-        devices = self._engine.fetchDeviceList()
-        imp = [DeviceItem.fromSqlTuple(r) for r in devices if r[6] == 1]
-        home = [DeviceItem.fromSqlTuple(r) for r in devices if r[6] == 2]
-        return imp, home
+        return {r[0]: DeviceItem.fromSqlTuple(r) for r in self._engine.fetchDeviceList()}
 
     def getSubstMap(self):
         importToHomebrew = defaultdict(list)
@@ -32,13 +29,9 @@ class PersistenceFacade(QObject):
 
         return importToHomebrew, homebrewToImport
 
-    # def fetchDicts(self, dict_list: list):
-    #     # make domain model dicts from raw SQL records
-    #     return {n: MapModel(data=dict(d)) for n, d in zip(dict_list, self._engine.fetchDicts(dict_list))}
-    #
-    # def fetchRawPlanData(self):
-    #     return {r[1]: [r[2], r[3], r[4]] for r in self._engine.fetchAllPlanRecrods()}
-    #
+    def getVendorDict(self):
+        return {v[0]: [v[1], v[2]] for v in self._engine.fetchVendorList()}
+
     # def updateBillItem(self, item: BillItem):
     #     print("persistence facade update call:", item)
     #     self._engine.updateBillRecord(item.toTuple())

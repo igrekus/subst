@@ -1,18 +1,18 @@
 import const
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QAbstractItemView, QAction, QMessageBox, QTreeView
-from PyQt5.QtCore import Qt, QSortFilterProxyModel
+from PyQt5.QtCore import Qt, QSortFilterProxyModel, QModelIndex
 
 from domainmodel import DomainModel
 from devicelistmodel import DeviceListModel
 from mysqlengine import MysqlEngine
 from persistencefacade import PersistenceFacade
+from uifacade import UiFacade
 
 
 class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
-        # TODO !!! use dict.get(key, default) !!!
         super(MainWindow, self).__init__(parent)
 
         self.setAttribute(Qt.WA_QuitOnClose)
@@ -31,13 +31,14 @@ class MainWindow(QMainWindow):
         # self._printEngine = PrintEngine(parent=self)
         # self._reportManager.setEngine(self._printEngine)
 
-        # # persistence engine
-        # # self._persistenceEngine = CsvEngine(parent=self)
+        # persistence engine
+        # self._persistenceEngine = CsvEngine(parent=self)
         self._persistenceEngine = MysqlEngine(parent=self)
-        #
-        # # facades
+
+        # facades
         self._persistenceFacade = PersistenceFacade(parent=self, persistenceEngine=self._persistenceEngine)
         # self._uiFacade = UiFacade(parent=self, reportManager=self._reportManager)
+        self._uiFacade = UiFacade(parent=self)
         #
         # models
         # domain
@@ -53,13 +54,12 @@ class MainWindow(QMainWindow):
         # self._modelPlanSearchProxy = QSortFilterProxyModel(parent=self)
         # self._modelPlanSearchProxy.setSourceModel(self._modelBillPlan)
         #
-        # # connect ui facade to models
-        # self._uiFacade.setDomainModel(self._modelDomain)
-        # self._uiFacade.setBillModel(self._modelBillSearchProxy)
-        # self._uiFacade.setPlanModel(self._modelPlanSearchProxy)
-        #
-        # # actions
-        # self.actRefresh = QAction("Обновить", self)
+        # connect ui facade to models
+        self._uiFacade.setDomainModel(self._modelDomain)
+
+        # actions
+        self.actRefresh = QAction("Обновить", self)
+        self.actOpenDeviceEditor = QAction("Редактор устройств", self)
         # self.actAddBillRecord = QAction("Добавить счёт...", self)
         # self.actEditBillRecord = QAction("Изменить счёт...", self)
         # self.actDeleteBillRecord = QAction("Удалить счёт...", self)
@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
 
         # models
         self._modelDomain.initModel()
-        self._modelDeviceList.initModel()
+        self._modelDeviceList.initModel(self._modelDeviceList.buildImportToHomebrewTree)
 
         # init UI
         # main table
@@ -85,13 +85,9 @@ class MainWindow(QMainWindow):
         self.ui.treeDeviceList.setModel(self._modelSearchProxy)
         self.ui.treeDeviceList.setSelectionMode(QAbstractItemView.SingleSelection)
         self.ui.treeDeviceList.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.ui.treeDeviceList.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        # draw delegates
-        # self.ui.tableBill.setItemDelegateForRow(0, TableRowDelegate(self.ui.tableBill))
-        # self.ui.tableBill.setHorizontalHeader(SectionHeaderView(Qt.Horizontal, parent=self.ui.tableBill))
+        # self.ui.treeDeviceList.setEditTriggers(QAbstractItemView.NoEditTriggers)
         # formatting
         self.ui.treeDeviceList.setUniformRowHeights(True)
-        self.ui.treeDeviceList.setExpandsOnDoubleClick(True)
         self.ui.treeDeviceList.header().setHighlightSections(False)
         self.ui.treeDeviceList.header().setStretchLastSection(True)
 
@@ -103,27 +99,18 @@ class MainWindow(QMainWindow):
     #     self.ui.dateFromFilter.setDate(QDate.fromString(self._modelDomain.getEarliestBillDate(), "dd.MM.yyyy"))
     #     self.ui.dateUntilFilter.setDate(QDate.currentDate())
     #
-    #     # self.btnRefresh.setVisible(False)
-    #
-    #     self.buildWeekSelectionCombo()
-    #
-    #     # create actions
-    #     self.initActions()
-    #
-    #     # setup ui widget signals
-    #     # buttons
-    #     self.ui.btnRefresh.clicked.connect(self.onBtnRefreshClicked)
-    #     self.ui.btnAddBill.clicked.connect(self.onBtnAddBillClicked)
-    #     self.ui.btnEditBill.clicked.connect(self.onBtnEditBillClicked)
-    #     self.ui.btnDeleteBill.clicked.connect(self.onBtnDeleteBillClicked)
-    #     self.ui.btnPrint.clicked.connect(self.onBtnPrintClicked)
-    #     self.ui.btnDictEditor.clicked.connect(self.onBtnDictEditorClicked)
-    #
-    #     # table widgets
-    #     self.ui.tableBill.doubleClicked.connect(self.onTableBillDoubleClicked)
-    #     self.ui.tabWidget.currentChanged.connect(self.onTabBarCurrentChanged)
-    #
-    #     # search widgets
+        # create actions
+        self.initActions()
+
+        # setup ui widget signals
+        # buttons
+        self.ui.radioImport.toggled.connect(self.onRadioImportToggled)
+        self.ui.btnDeviceEditor.clicked.connect(self.onBtnDeviceEditorClicked)
+
+        # tree and selection
+        self.ui.treeDeviceList.selectionModel().currentChanged.connect(self.onCurrentTreeItemChanged)
+
+        # search widgets
     #     self.ui.comboWeek.currentIndexChanged.connect(self.onComboWeekCurrentIndexChanged)
     #     self.ui.editSearch.textChanged.connect(self.setSearchFilter)
     #     self.ui.comboProjectFilter.currentIndexChanged.connect(self.setSearchFilter)
@@ -136,71 +123,40 @@ class MainWindow(QMainWindow):
     #     self.setSearchFilter()
     #
     #     self.ui.btnRefresh.setVisible(False)
-    #
-    # def initActions(self):
-    #     self.actRefresh.setShortcut("Ctrl+R")
-    #     self.actRefresh.setStatusTip("Обновить данные")
-    #     self.actRefresh.triggered.connect(self.procActRefresh)
-    #
-    #     self.actAddBillRecord.setShortcut("Ctrl+A")
-    #     self.actAddBillRecord.setStatusTip("Добавить новый счёт")
-    #     self.actAddBillRecord.triggered.connect(self.procActAddBillRecord)
-    #
-    #     # self.actEditBillRecord.setShortcut("Ctrl+A")
-    #     self.actEditBillRecord.setStatusTip("Добавить новый счёт")
-    #     self.actEditBillRecord.triggered.connect(self.procActEditRecord)
-    #
-    #     # self.actDeleteBillRecord.setShortcut("Ctrl+A")
-    #     self.actDeleteBillRecord.setStatusTip("Добавить новый счёт")
-    #     self.actDeleteBillRecord.triggered.connect(self.procActDeleteRecord)
-    #
-    #     self.actPrint.setStatusTip("Напечатать текущую таблицу")
-    #     self.actPrint.triggered.connect(self.procActPrint)
-    #
-    #     self.actOpenDictEditor.setStatusTip("Открыть редактор словарей")
-    #     self.actOpenDictEditor.triggered.connect(self.procActOpenDictEditor)
-    #
-    # def refreshView(self):
-    #     screenRect = QApplication.desktop().screenGeometry()
-    #
-    #     tbwidth = screenRect.width() - 50
-    #     self.ui.tableBill.setColumnWidth(0, tbwidth * 0.04)  # +0.01
-    #     self.ui.tableBill.setColumnWidth(1, tbwidth * 0.06)
-    #     self.ui.tableBill.setColumnWidth(2, tbwidth * 0.07)
-    #     self.ui.tableBill.setColumnWidth(3, tbwidth * 0.07)
-    #     self.ui.tableBill.setColumnWidth(4, tbwidth * 0.06)
-    #     self.ui.tableBill.setColumnWidth(5, tbwidth * 0.06)
-    #     self.ui.tableBill.setColumnWidth(6, tbwidth * 0.06)
-    #     self.ui.tableBill.setColumnWidth(7, tbwidth * 0.215)  # +0.02
-    #     self.ui.tableBill.setColumnWidth(8, tbwidth * 0.06)
-    #     self.ui.tableBill.setColumnWidth(9, tbwidth * 0.065)
-    #     self.ui.tableBill.setColumnWidth(10, tbwidth * 0.06)
-    #     self.ui.tableBill.setColumnWidth(11, tbwidth * 0.06)
-    #     self.ui.tableBill.setColumnWidth(12, tbwidth * 0.06)
-    #     self.ui.tableBill.setColumnWidth(13, tbwidth * 0.04)
-    #     # self.ui.tableBill.setColumnWidth(14, tbwidth * 0.03)
-    #     self.ui.tableBill.setColumnWidth(15, tbwidth * 0.01)
-    #
-    #     tpwidth = screenRect.width() - 45
-    #     # 1 2 3 5 .. week count - 1
-    #     # self.ui.tablePlan.setColumnWidth(0, tpwidth * 0.035)
-    #     self.ui.tablePlan.setColumnWidth(1, tpwidth * 0.13)
-    #     self.ui.tablePlan.setColumnWidth(2, tpwidth * 0.05)
-    #     self.ui.tablePlan.setColumnWidth(3, tpwidth * 0.10)
-    #     # self.ui.tablePlan.setColumnWidth(4, tpwidth * 0.06)
-    #     self.ui.tablePlan.setColumnWidth(5, tpwidth * 0.09)
-    #     self.ui.tablePlan.setColumnWidth(6, tpwidth * 0.09)
-    #     self.ui.tablePlan.setColumnWidth(7, tpwidth * 0.09)
-    #     self.ui.tablePlan.setColumnWidth(8, tpwidth * 0.09)
-    #     self.ui.tablePlan.setColumnWidth(9, tpwidth * 0.09)
-    #     self.ui.tablePlan.setColumnWidth(10, tpwidth * 0.09)
-    #     self.ui.tablePlan.setColumnWidth(11, tpwidth * 0.09)
-    #     self.ui.tablePlan.setColumnWidth(12, tpwidth * 0.09)
-    #
-    # # ui events
-    # def onBtnRefreshClicked(self):
-    #     self.actRefresh.trigger()
-    #
+
+    def initActions(self):
+        self.actRefresh.setShortcut("Ctrl+R")
+        self.actRefresh.setStatusTip("Обновить данные")
+        self.actRefresh.triggered.connect(self.procActRefresh)
+
+        self.actOpenDeviceEditor.setStatusTip("Открыть редактор устройств")
+        self.actOpenDeviceEditor.triggered.connect(self.procActOpenDeviceEditor)
+
+    def refreshView(self):
+        windowRect = self.geometry()
+        tdwidth = windowRect.width() - 50
+
+        self.ui.treeDeviceList.setColumnWidth(0, tdwidth * 0.15)
+        self.ui.treeDeviceList.setColumnWidth(1, tdwidth * 0.05)
+        self.ui.treeDeviceList.setColumnWidth(2, tdwidth * 0.10)
+        self.ui.treeDeviceList.setColumnWidth(3, tdwidth * 0.25)
+        self.ui.treeDeviceList.setColumnWidth(4, tdwidth * 0.30)
+        self.ui.treeDeviceList.setColumnWidth(5, tdwidth * 0.15)
+
+    def updateItemInfo(self, index):
+        self.ui.textDeviceInfo.setPlainText(self._uiFacade.requestItemInfo(index))
+
+    # ui events
+    def onRadioImportToggled(self, checked):
+        self._modelDeviceList.clear()
+        if checked:
+            self._modelDeviceList.initModel(self._modelDeviceList.buildImportToHomebrewTree)
+        else:
+            self._modelDeviceList.initModel(self._modelDeviceList.buildHomebrewToImportTree)
+
+    def onBtnDeviceEditorClicked(self):
+        self.actOpenDeviceEditor.trigger()
+
     # def onBtnAddBillClicked(self):
     #     self.actAddBillRecord.trigger()
     #
@@ -223,71 +179,25 @@ class MainWindow(QMainWindow):
     #     if index == 1:
     #         self._modelDomain.buildPlanData()
     #
-    # def onComboWeekCurrentIndexChanged(self, index):
-    #     self._modelBillPlan.updateHeader(index + 1)
-    #
-    # # misc events
-    # def resizeEvent(self, event):
-    #     # print("resize event")
-    #     self.refreshView()
-    #     # self.ui.tableBill.resizeRowsToContents()
-    #     # self.ui.tablePlan.resizeRowsToContents()
-    #
+    def onCurrentTreeItemChanged(self, cur: QModelIndex, prev: QModelIndex):
+        # currentSourceIndex = self._modelSearchProxy.mapToSource(self.ui.treeDeviceList.selectionModel().selectedIndexes()[0])
+        sourceIndex = self._modelSearchProxy.mapToSource(cur)
+        self.updateItemInfo(sourceIndex)
+
+    # misc events
+    def resizeEvent(self, event):
+        self.actRefresh.trigger()
+
     # def closeEvent(self, *args, **kwargs):
-    #     # TODO error handling on saving before exiting
     #     self._uiFacade.requestExit()
     #     super(MainWindow, self).closeEvent(*args, **kwargs)
-    #
-    # # action processing
-    # # send user commands to the ui facade: (command, parameters (like indexes, etc.))
-    # def procActRefresh(self):
-    #     print("act refresh trigger")
-    #     self._uiFacade.requestRefresh()
-    #     self.refreshView()
-    #     self.ui.tableBill.resizeRowsToContents()
-    #     self.ui.tablePlan.resizeRowsToContents()
-    #
-    # def procActAddBillRecord(self):
-    #     # print("act add record trigger")
-    #     row = self._uiFacade.requestAddBillRecord()
-    #
-    #     if row is not None:
-    #         index = self._modelBillSearchProxy.mapFromSource(self._modelBillList.index(row, 0))
-    #         self.ui.tableBill.scrollTo(index)
-    #         self.ui.tableBill.selectionModel().setCurrentIndex(index, QItemSelectionModel.Select
-    #                                                            | QItemSelectionModel.Rows)
-    #
-    # def procActEditRecord(self):
-    #     # print("act edit record trigger")
-    #     if not self.ui.tableBill.selectionModel().hasSelection():
-    #         QMessageBox.information(self, "Ошибка", "Изменить: пожалуйста, выберите запись.")
-    #         return
-    #
-    #     selectedIndex = self.ui.tableBill.selectionModel().selectedIndexes()[0]
-    #     self._uiFacade.requestEditBillRecord(self._modelBillSearchProxy.mapToSource(selectedIndex))
-    #
-    # def procActDeleteRecord(self):
-    #     # print("act delete record trigger")
-    #     if not self.ui.tableBill.selectionModel().hasSelection():
-    #         QMessageBox.information(self, "Ошибка", "Удалить: пожалуйста, выберите запись.")
-    #         return
-    #
-    #     selectedIndex = self.ui.tableBill.selectionModel().selectedIndexes()[0]
-    #     self._uiFacade.requestDeleteRecord(self._modelBillSearchProxy.mapToSource(selectedIndex))
-    #
-    # def procActPrint(self):
-    #     self._uiFacade.requestPrint(self.ui.tabWidget.currentIndex())
-    #
-    # def setSearchFilter(self, dummy=0):
-    #     self._modelBillSearchProxy.filterString = self.ui.editSearch.text()
-    #     self._modelBillSearchProxy.filterProject = self.ui.comboProjectFilter.currentData(const.RoleNodeId)
-    #     self._modelBillSearchProxy.filterStatus = self.ui.comboStatusFilter.currentData(const.RoleNodeId)
-    #     self._modelBillSearchProxy.filterPriority = self.ui.comboPriorityFilter.currentData(const.RoleNodeId)
-    #     self._modelBillSearchProxy.filterShipment = self.ui.comboShipmentFilter.currentData(const.RoleNodeId)
-    #     self._modelBillSearchProxy.filterFromDate = self.ui.dateFromFilter.date()
-    #     self._modelBillSearchProxy.filterUntilDate = self.ui.dateUntilFilter.date()
-    #     self._modelBillSearchProxy.invalidate()
-    #     self.ui.tableBill.hideColumn(14)
-    #
-    # def procActOpenDictEditor(self):
-    #     self._uiFacade.requestOpenDictEditor()
+
+    # action processing
+    # send user commands to the ui facade: (command, parameters (like indexes, etc.))
+    def procActRefresh(self):
+        # print("act refresh triggered")
+        # self._uiFacade.requestRefresh()
+        self.refreshView()
+
+    def procActOpenDeviceEditor(self):
+        self._uiFacade.requestOpenDeviceEditor()

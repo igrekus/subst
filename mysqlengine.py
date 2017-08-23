@@ -57,16 +57,9 @@ class MysqlEngine(QObject):
     def fetchSubstMap(self):
         return self.execSimpleQuery("CALL getSubstMap()")
 
-    # def fetchDicts(self, dict_list: list):
-    #     print("sqlite engine fetch dicts")
-    #     def fetchDict(connection, dict_name: str):
-    #         cursor = connection.execute("SELECT " + dict_name + "_id, " + dict_name + "_name"
-    #                                     "  FROM " + dict_name + " "
-    #                                     " WHERE " + dict_name + "_id > 0")
-    #         return cursor.fetchall()
-    #
-    #     return [fetchDict(self._connection, d) for d in dict_list]
-    #
+    def fetchVendorList(self):
+        return self.execSimpleQuery("CAll getVendorList()")
+
     # def fetchAllPlanRecrods(self):
     #     print("sqlite engine fetch raw plan data")
     #     with self._connection:
@@ -145,7 +138,6 @@ class MysqlEngine(QObject):
     #     return rec_id
     #
     # def deleteBillRecord(self, record: BillItem):
-    #     # TODO make list of tuples with facade, only write here
     #     print("sqlite engine delete bill record:", record)
     #     with self._connection:
     #         cursor = self._connection.cursor()
