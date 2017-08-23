@@ -37,7 +37,7 @@ class MysqlEngine(QObject):
                                                db=settings['database'],
                                                charset='utf8mb4')
         except pymysql.MySQLError as e:
-            return False, str("DB error: " + e.args[0] + " " + e.args[1])
+            return False, str("DB error: " + str(e.args[0]) + " " + e.args[1])
 
         return True, "connection established"
 
@@ -53,6 +53,9 @@ class MysqlEngine(QObject):
 
     def fetchDeviceList(self):
         return self.execSimpleQuery("CALL getDeviceList()")
+
+    def fetchSubstMap(self):
+        return self.execSimpleQuery("CALL getSubstMap()")
 
     # def fetchDicts(self, dict_list: list):
     #     print("sqlite engine fetch dicts")

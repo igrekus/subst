@@ -1,9 +1,10 @@
 import const
 from PyQt5 import uic
-from PyQt5.QtWidgets import QMainWindow, QAbstractItemView, QAction, QMessageBox, QApplication, QTableView
-from PyQt5.QtCore import Qt, QSortFilterProxyModel, QItemSelectionModel, QDate
+from PyQt5.QtWidgets import QMainWindow, QAbstractItemView, QAction, QMessageBox, QTreeView
+from PyQt5.QtCore import Qt, QSortFilterProxyModel
 
 from domainmodel import DomainModel
+from devicelistmodel import DeviceListModel
 from mysqlengine import MysqlEngine
 from persistencefacade import PersistenceFacade
 
@@ -42,10 +43,10 @@ class MainWindow(QMainWindow):
         # domain
         self._modelDomain = DomainModel(parent=self, persistenceFacade=self._persistenceFacade)
 
-        # # bill list + search proxy
-        # self._modelBillList = BillTableModel(parent=self, domainModel=self._modelDomain)
-        # self._modelBillSearchProxy = BillSearchProxyModel(parent=self)
-        # self._modelBillSearchProxy.setSourceModel(self._modelBillList)
+        # bill list + search proxy
+        self._modelDeviceList = DeviceListModel(parent=self, domainModel=self._modelDomain)
+        self._modelSearchProxy = QSortFilterProxyModel(parent=self)
+        self._modelSearchProxy.setSourceModel(self._modelDeviceList)
         #
         # # bill plan + search proxy
         # self._modelBillPlan = BillPlanModel(parent=self, domainModel=self._modelDomain)
@@ -76,74 +77,24 @@ class MainWindow(QMainWindow):
 
         # models
         self._modelDomain.initModel()
+        self._modelDeviceList.initModel()
 
-    #     self._modelBillList.initModel()
-    #     self._modelBillPlan.initModel()
-    #
-    #     # init UI
-    #     # bill list table
-    #     self.ui.tableBill: QTableView
-    #     self.ui.tableBill.setModel(self._modelBillSearchProxy)
-    #     self.ui.tableBill.setSelectionMode(QAbstractItemView.SingleSelection)
-    #     self.ui.tableBill.setSelectionBehavior(QAbstractItemView.SelectRows)
-    #     self.ui.tableBill.setEditTriggers(QAbstractItemView.NoEditTriggers)
-    #     # draw delegates
-    #     # self.ui.tableBill.setItemDelegateForRow(0, TableRowDelegate(self.ui.tableBill))
-    #     # self.ui.tableBill.setHorizontalHeader(SectionHeaderView(Qt.Horizontal, parent=self.ui.tableBill))
-    #     # formatting
-    #     self.ui.tableBill.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
-    #     self.ui.tableBill.horizontalHeader().setHighlightSections(False)
-    #     self.ui.tableBill.horizontalHeader().setFixedHeight(24)
-    #     self.ui.tableBill.horizontalHeader().setStretchLastSection(True)
-    #     self.ui.tableBill.horizontalHeader().setStyleSheet("QHeaderView::section {"
-    #                                                        "    padding: 4px;"
-    #                                                        "    border-style: none;"
-    #                                                        "    border-color: #000000;"
-    #                                                        "    border-bottom: 1px solid #000000;"
-    #                                                        "    border-right: 1px solid #000000;"
-    #                                                        "}"
-    #                                                        "QHeaderView::section:horizontal {"
-    #                                                        "    border-right: 1px solid #000000"
-    #                                                        "}")
-    #     # self.ui.tableBill.horizontalHeader().setAutoFillBackground(False)
-    #     self.ui.tableBill.verticalHeader().setVisible(False)
-    #     # self.ui.tableBill.verticalHeader().setDefaultSectionSize(40)
-    #     self.ui.tableBill.setWordWrap(True)
-    #     self.ui.tableBill.resizeRowsToContents()
-    #     self.ui.tableBill.setStyleSheet("QTableView { gridline-color : black}")
-    #     self.ui.tableBill.hideColumn(14)
-    #     # self.ui.tableBill.setSpan(0, 0, 1, 3)
-    #
-    #     # bill plan table
-    #     self.ui.tablePlan.setModel(self._modelPlanSearchProxy)
-    #     self.ui.tablePlan.setSelectionMode(QAbstractItemView.NoSelection)
-    #     self.ui.tablePlan.setSelectionBehavior(QAbstractItemView.SelectRows)
-    #     self.ui.tablePlan.setEditTriggers(QAbstractItemView.SelectedClicked)
-    #     self.ui.tablePlan.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
-    #     self.ui.tablePlan.horizontalHeader().setHighlightSections(False)
-    #     self.ui.tablePlan.horizontalHeader().setFixedHeight(24)
-    #     self.ui.tablePlan.horizontalHeader().setStretchLastSection(True)
-    #     self.ui.tablePlan.horizontalHeader().setStyleSheet("QHeaderView::section {"
-    #                                                        "    padding: 4px;"
-    #                                                        "    border-style: none;"
-    #                                                        "    border-color: #000000;"
-    #                                                        "    border-bottom: 1px solid #000000;"
-    #                                                        "    border-right: 1px solid #000000;"
-    #                                                        "}"
-    #                                                        "QHeaderView::section:horizontal {"
-    #                                                        "    border-right: 1px solid #000000"
-    #                                                        "}")
-    #     self.ui.tablePlan.verticalHeader().setVisible(False)
-    #     self.ui.tablePlan.hideColumn(0)
-    #     # self.ui.tablePlan.hideColumn(3)
-    #     self.ui.tablePlan.hideColumn(4)
-    #     # self.ui.tablePlan.verticalHeader().setDefaultSectionSize(40)
-    #     self.ui.tablePlan.setWordWrap(True)
-    #     self.ui.tablePlan.resizeRowsToContents()
-    #     # self.ui.tablePlan.setSpan(0, 0, 1, 3)
-    #     self.ui.tablePlan.setStyleSheet("QTableView { gridline-color : black }")
-    #     # self.ui.tablePlan.setItemDelegateForRow(0, TableRowDelegate(self.ui.tablePlan))
-    #
+        # init UI
+        # main table
+        self.ui.treeDeviceList: QTreeView
+        self.ui.treeDeviceList.setModel(self._modelSearchProxy)
+        self.ui.treeDeviceList.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.ui.treeDeviceList.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ui.treeDeviceList.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        # draw delegates
+        # self.ui.tableBill.setItemDelegateForRow(0, TableRowDelegate(self.ui.tableBill))
+        # self.ui.tableBill.setHorizontalHeader(SectionHeaderView(Qt.Horizontal, parent=self.ui.tableBill))
+        # formatting
+        self.ui.treeDeviceList.setUniformRowHeights(True)
+        self.ui.treeDeviceList.setExpandsOnDoubleClick(True)
+        self.ui.treeDeviceList.header().setHighlightSections(False)
+        self.ui.treeDeviceList.header().setStretchLastSection(True)
+
     #     # setup filter widgets
     #     self.ui.comboProjectFilter.setModel(self._modelDomain.dicts["project"])
     #     self.ui.comboStatusFilter.setModel(self._modelDomain.dicts["status"])

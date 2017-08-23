@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from deviceitem import DeviceItem
 from mapmodel import MapModel
 from PyQt5.QtCore import QObject
@@ -14,12 +16,21 @@ class PersistenceFacade(QObject):
     def initFacade(self):
         print("init persistence facade:", self._engine.engineType)
 
-    def fetchDeviceList(self):
+    def getDeviceList(self):
         devices = self._engine.fetchDeviceList()
         imp = [DeviceItem.fromSqlTuple(r) for r in devices if r[6] == 1]
         home = [DeviceItem.fromSqlTuple(r) for r in devices if r[6] == 2]
         return imp, home
 
+    def getSubstMap(self):
+        importToHomebrew = defaultdict(list)
+        homebrewToImport = defaultdict(list)
+
+        for r in self._engine.fetchSubstMap():
+            importToHomebrew[r[0]].append(r[1])
+            homebrewToImport[r[1]].append(r[0])
+
+        return importToHomebrew, homebrewToImport
 
     # def fetchDicts(self, dict_list: list):
     #     # make domain model dicts from raw SQL records

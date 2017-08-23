@@ -22,34 +22,60 @@ class DomainModel(QObject):
         super(DomainModel, self).__init__(parent)
 
         self._persistenceFacade = persistenceFacade
-        self.importDevices = list()
-        self.homebrewDevices = list()
+        self.importDeviceList = list()
+        self.homebrewDeviceList = list()
+        self.importToHomebrew = list()
+        self.homebrewToImport = list()
 
     def initModel(self):
         print("init domain model")
 
         # self.dicts = self._persistenceFacade.fetchDicts(self.dict_list)
 
-        self.importDevices, self.homebrewDevices = self._persistenceFacade.fetchDeviceList()
-        print(self.importDevices)
-        print(self.homebrewDevices)
+        self.importDeviceList, self.homebrewDeviceList = self._persistenceFacade.getDeviceList()
+
+        self.importToHomebrew, self.homebrewToImport = self._persistenceFacade.getSubstMap()
+
+    def importListRowCount(self):
+        return len(self.importToHomebrew.keys())
+
+    def importItemRowCount(self, parentId):
+        if parentId in self.importToHomebrew:
+            return len(self.importToHomebrew[parentId])
+        else:
+            return 0
+
+    def getHomebrewItemById(self, id_):
+        for i in self.homebrewDeviceList:
+            if i.item_id == id_:
+                return i
+        return None
+
+    def getImportItemById(self, id_):
+        for i in self.importDeviceList:
+            if i.item_id == id_:
+                return i
+        return None
+
+    def getImportItemAtRow(self, row):
+        return self.importDeviceList[row]
+
+    def getHomebrewItemAtRowForParent(self, parentId, row):
+        return self.getHomebrewItemById(self.importToHomebrew[parentId][row])
+
+    def getHomebrewItemListByParentId(self, parentId):
+        return [self.getHomebrewItemById(i) for i in self.importToHomebrew[parentId]]
 
     # def refreshPlanData(self):
     #     if self._rawPlanData:
     #         self._rawPlanData.clear()
     #     self._rawPlanData = self._persistenceFacade.fetchRawPlanData()
-    #
-    # def billListRowCount(self):
-    #     return len(self._billData)
-    #
+
     # def getBillItemAtRow(self, row: int):
     #     return self._billData[row]
     #
     # def getBillItemAtIndex(self, index: QModelIndex):
     #     return self._billData[index.row()]
-    #
-    # def planListRowCount(self):
-    #     return len(self._planData)
     #
     # def getPlanItemAtRow(self, row: int):
     #     return self._planData[row]
