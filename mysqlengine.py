@@ -60,47 +60,9 @@ class MysqlEngine(QObject):
     def fetchVendorList(self):
         return self.execSimpleQuery("CAll getVendorList()")
 
-    # def fetchAllPlanRecrods(self):
-    #     print("sqlite engine fetch raw plan data")
-    #     with self._connection:
-    #         cursor = self._connection.execute("SELECT main.bill_plan.plan_id"
-    #                                           ", main.bill_plan.plan_billRef"
-    #                                           ", main.bill_plan.plan_year"
-    #                                           ", main.bill_plan.plan_week"
-    #                                           ", main.bill_plan.plan_active"
-    #                                           "  FROM main.bill_plan"
-    #                                           " WHERE main.bill_plan.plan_id > 0")
-    #                                           # "   AND main.bill.archive = 0")
-    #         # print(cursor.fetchall())
-    #         return cursor.fetchall()
-    #
-    # def shutdownEngine(self):
-    #     self._connection.close()
-    #
-    # def updateBillRecord(self, data: list):
-    #     print("sqlite engine update bill record:", data)
-    #     with self._connection:
-    #         cursor = self._connection.cursor()
-    #         cursor.execute("UPDATE bill "
-    #                        "   SET bill_date = ?"
-    #                        "     , bill_name = ?"
-    #                        "     , bill_category = ?"
-    #                        "     , bill_vendor = ?"
-    #                        "     , bill_cost = ?"
-    #                        "     , bill_project = ?"
-    #                        "     , bill_desc = ?"
-    #                        "     , bill_shipment_time = ?"
-    #                        "     , bill_status = ?"
-    #                        "     , bill_priority = ?"
-    #                        "     , bill_shipment_date = ?"
-    #                        "     , bill_shipment_status = ?"
-    #                        "     , bill_week = ?"
-    #                        "     , bill_note = ?"
-    #                        "     , archive = 0"
-    #                        " WHERE bill_id = ?", data)
-    #
-    # def insertBillRecord(self, data: list):
-    #     print("sqlite engine insert bill record:", data)
+    def insertDeviceRecord(self, data):
+        print("mysql engine insert device record:", data)
+        return 100
     #     with self._connection:
     #     # try:
     #     #     print("begin insert bill")
@@ -136,7 +98,7 @@ class MysqlEngine(QObject):
     #                                       "      VALUES (NULL, ?, 0, 0, 0)", (rec_id, ))
     #         # print("end insert plan")
     #     return rec_id
-    #
+
     # def deleteBillRecord(self, record: BillItem):
     #     print("sqlite engine delete bill record:", record)
     #     with self._connection:

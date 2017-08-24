@@ -50,6 +50,8 @@ class DeviceListModel(QAbstractItemModel):
 
         self.rootNode = TreeNode(None, None)
 
+        self.treeType = 1  # 1=import-home, 2=home-import
+
     def clear(self):
 
         def clearTreeNode(node):
@@ -71,11 +73,13 @@ class DeviceListModel(QAbstractItemModel):
                 n.appendChild(TreeNode(self._modelDomain.getItemById(i).item_id, n))
 
     def buildImportToHomebrewTree(self):
+        self.treeType = 1
         self.buildFirstLevel(data=self._modelDomain.deviceList, origin=1)
         self.buildSecondLevel(mapping=self._modelDomain.importToHomebrew)
 
     def buildHomebrewToImportTree(self):
-        self.buildFirstLevel(data=self._modelDomain.homebrewDeviceList, origin=2)
+        self.treeType = 2
+        self.buildFirstLevel(data=self._modelDomain.deviceList, origin=2)
         self.buildSecondLevel(mapping=self._modelDomain.homebrewToImport)
 
     def initModel(self, buildFunc):

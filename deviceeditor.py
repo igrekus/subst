@@ -1,12 +1,14 @@
 import const
+from copy import copy
 from PyQt5 import uic
 from PyQt5.QtWidgets import QDialog, QMessageBox, QInputDialog, QLineEdit
 from PyQt5.QtCore import Qt
 
+from deviceitem import DeviceItem
+
 
 class DeviceEditor(QDialog):
-
-    def __init__(self, parent=None, domainModel=None):
+    def __init__(self, parent=None, domainModel=None, data: DeviceItem=None):
         super(DeviceEditor, self).__init__(parent)
 
         self.setAttribute(Qt.WA_QuitOnClose)
@@ -19,65 +21,87 @@ class DeviceEditor(QDialog):
         # instance variables
         self._modelDomain = domainModel
 
-        print("begin init")
+        self._data = data
+
         self.initDialog()
 
-        # self.ui.btnAdd.clicked.connect(self.onBtnAddClicked)
-        # self.ui.btnEdit.clicked.connect(self.onBtnEditClicked)
-        # self.ui.btnDelete.clicked.connect(self.onBtnDeleteClicked)
-        # self.ui.comboDict.currentIndexChanged.connect(self.onComboDictIndexChanged)
-        # self.ui.listView.doubleClicked.connect(self.onListViewDoubleClicked)
+        self.ui.btnOk.clicked.connect(self.onBtnOkClicked)
+        self.ui.btnAddSubst.clicked.connect(self.onBtnAddSubstClicked)
+        self.ui.btnRemoveSubst.clicked.connect(self.onBtnRemoveSubstClicked)
 
     def initDialog(self):
         self.ui.comboVendor.setModel(self._modelDomain.vendorMapModel)
-        self.ui.comboVendor.setCurrentIndex(0)
-        self.ui.listDevices.setModel(self._modelDomain.deviceMapModel)
 
-    # def onBtnAddClicked(self):
-    #     self.addRecord()
-    #
-    # def onBtnEditClicked(self):
-    #     if not self.ui.listView.selectionModel().hasSelection():
-    #         QMessageBox.information(self, "Ошибка", "Изменить: пожалуйста, выберите запись.")
-    #         return
-    #
-    #     self.editRecord(self.ui.listView.selectionModel().selectedIndexes()[0])
-    #
-    # def onBtnDeleteClicked(self):
-    #     if not self.ui.listView.selectionModel().hasSelection():
-    #         QMessageBox.information(self, "Ошибка", "Удалить: пожалуйста, выберите запись.")
-    #         return
-    #
-    #     self.delRecrod(self.ui.listView.selectionModel().selectedIndexes()[0])
-    #
-    # def onComboDictIndexChanged(self, index):
-    #     self.ui.listView.setModel(self._modelDomain.dicts[self.dictList[index]])
-    #     self.ui.listView.setRowHidden(0, True)
-    #
-    # def addRecord(self):
-    #     data, ok = QInputDialog.getText(self, "Добавить запись", "Введите название:", QLineEdit.Normal, "")
-    #
-    #     if ok:
-    #         data = data[0].upper() + data[1:]
-    #         self._modelDomain.addDictRecord(self.dictList[self.ui.comboDict.currentIndex()], data)
-    #
-    # def editRecord(self, index):
-    #     data, ok = QInputDialog.getText(self, "Изменить запись", "Введите название:", QLineEdit.Normal,
-    #                                     index.data(Qt.DisplayRole))
-    #
-    #     if ok:
-    #         data = data[0].upper() + data[1:]
-    #         self._modelDomain.editDictRecord(self.dictList[self.ui.comboDict.currentIndex()],
-    #                                          (index.data(const.RoleNodeId), data))
-    #
-    # def delRecrod(self, index):
-    #     result = QMessageBox.question(self.parent(), "Вопрос",
-    #                                   "Вы действительно хотите удалить выбранную запись?")
-    #     if result != QMessageBox.Yes:
-    #         return
-    #
-    #     self._modelDomain.deleteDictRecord(self.dictList[self.ui.comboDict.currentIndex()],
-    #                                        index.data(const.RoleNodeId))
-    #
-    # def onListViewDoubleClicked(self, index):
-    #     self.editRecord(index)
+        if self._data.item_id is None:
+            self.setWindowTitle("Добавить устройство")
+            self.resetWidgets()
+        else:
+            self.setWindowTitle("Редактировать устройство")
+            self.updateWidgets()
+
+    def resetWidgets(self):
+        self.ui.editName.setText("")
+        self.ui.comboVendor.setCurrentIndex(0)
+        self.ui.editDesc.setText("")
+        self.ui.textSpec.setPlainText("")
+
+    def updateWidgets(self):
+        self.ui.editName.setText(self._data.item_name)
+        self.ui.comboVendor.setCurrentText(self._modelDomain.vendorMapModel.getData(self._data.item_vendor))
+        self.ui.editDesc.setText(self._data.item_desc)
+        self.ui.textSpec.setPlainText(self._data.item_spec)
+        if self._data.item_origin == 1:
+            self.ui.radioImport.setChecked(True)
+        elif self._data.item_origin == 2:
+            self.ui.radioHomebrew.setChecked(True)
+
+    def onBtnAddSubstClicked(self):
+        print("add subst")
+
+    def onBtnRemoveSubstClicked(self):
+        print("remove subst")
+
+    def verifyInput(self):
+        print("verifying user input")
+        if not self.ui.editName.text():
+            QMessageBox.information(self, "Ошибка!", "Введите наименование прибора.")
+            return False
+
+        # if not self.ui.editDesc.text():
+        #     QMessageBox.information(self, "Ошибка!", "Введите описание прибора.")
+        #     return False
+        #
+        # if not self.ui.textSpec.toPlainText():
+        #     QMessageBox.information(self, "Ошибка!", "Введите параметры прибора.")
+        #     return False
+
+        if not self.ui.radioImport.isChecked() and not self.ui.radioHomebrew.isChecked():
+            QMessageBox.information(self, "Ошибка!", "Выберите происхождение прибора.")
+            return False
+
+        return True
+
+    def collectData(self):
+        print("collecting dlg data")
+
+        origin = 1
+        if self.ui.radioHomebrew.isChecked():
+            origin = 2
+
+        self._data = DeviceItem(id_=self._data.item_id,
+                                name=self.ui.editName.text(),
+                                vendor=self.ui.comboVendor.currentData(const.RoleNodeId),
+                                desc=self.ui.editDesc.text(),
+                                spec=self.ui.textSpec.toPlainText(),
+                                tags=None,
+                                origin=origin)
+
+    def getData(self):
+        return self._data
+
+    def onBtnOkClicked(self):
+        if self.verifyInput():
+            self.collectData()
+            self.accept()
+        else:
+            return

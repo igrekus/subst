@@ -32,13 +32,13 @@ class PersistenceFacade(QObject):
     def getVendorDict(self):
         return {v[0]: [v[1], v[2]] for v in self._engine.fetchVendorList()}
 
+    def insertDeviceItem(self, item: DeviceItem):
+        print("persistence facade insert device item call:", item)
+        return self._engine.insertDeviceRecord(item.toTuple())
+
     # def updateBillItem(self, item: BillItem):
     #     print("persistence facade update call:", item)
     #     self._engine.updateBillRecord(item.toTuple())
-    #
-    # def insertBillItem(self, item: BillItem) -> int:
-    #     print("persistence facade insert call:", item)
-    #     return self._engine.insertBillRecord(item.toTuple())
     #
     # def deleteBillItem(self, item):
     #     print("persistence facade delete call:", item)

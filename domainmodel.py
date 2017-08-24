@@ -1,5 +1,6 @@
 from PyQt5.QtCore import QObject, QModelIndex, pyqtSignal, QDate
 
+from deviceitem import DeviceItem
 from mapmodel import MapModel
 
 
@@ -25,23 +26,26 @@ class DomainModel(QObject):
 
         self._persistenceFacade = persistenceFacade
 
-        self.importDeviceList = dict()
-        self.homebrewDeviceList = dict()
+        self.deviceList = dict()
         self.importToHomebrew = dict()
         self.homebrewToImport = dict()
 
         self.vendorList = dict()
 
+        self.deviceMapModel = None
+        self.vendorMapModel = None
+
+    def buildMapModels(self):
+        print("building map models")
+        self.deviceMapModel = MapModel(self, {k: v.item_name for k, v in self.deviceList.items()})
+        self.vendorMapModel = MapModel(self, {k: v[0] for k, v in self.vendorList.items()})
+
     def initModel(self):
         print("init domain model")
-
         self.deviceList = self._persistenceFacade.getDeviceList()
         self.importToHomebrew, self.homebrewToImport = self._persistenceFacade.getSubstMap()
         self.vendorList = self._persistenceFacade.getVendorDict()
-
-        self.deviceMapModel = MapModel(self, {k: v.item_name for k, v in self.deviceList.items()})
-
-        self.vendorMapModel = MapModel(self, {k: v[0] for k, v in self.vendorList.items()})
+        self.buildMapModels()
 
     def getItemById(self, id_):
         return self.deviceList[id_]
@@ -53,70 +57,13 @@ class DomainModel(QObject):
         """
         return self.vendorList[id_]
 
-    # def refreshPlanData(self):
-    #     if self._rawPlanData:
-    #         self._rawPlanData.clear()
-    #     self._rawPlanData = self._persistenceFacade.fetchRawPlanData()
+    def addDeviceItem(self, item: DeviceItem):
+        print("domain model add device item call:", item)
+        newId = self._persistenceFacade.insertDeviceItem(item)
+        item.item_id = newId
 
-    # def getBillItemAtRow(self, row: int):
-    #     return self._billData[row]
-    #
-    # def getBillItemAtIndex(self, index: QModelIndex):
-    #     return self._billData[index.row()]
-    #
-    # def getPlanItemAtRow(self, row: int):
-    #     return self._planData[row]
-    #
-    # def getDicts(self):
-    #     return self.dicts
-    #
-    # def getTotalForWeek(self, week):
-    #     return sum(p[4] for p in self._planData if p[5] == week)
-    #
-    # def getPayedTotalForWeek(self, week):
-    #     return sum(p[4] for p in self._planData if p[5] == week and self.getBillItemById(p[2]).item_status == 1)
-    #
-    # def getRemainingTotalForWeek(self, week):
-    #     return sum(p[4] for p in self._planData if p[5] == week and self.getBillItemById(p[2]).item_status != 1)
-    #
-    # def getTotal(self, weeks):
-    #     return sum([self.getTotalForWeek(w) for w in weeks])
-    #
-    # def getPayedTotal(self, weeks):
-    #     return sum([self.getPayedTotalForWeek(w) for w in weeks])
-    #
-    # def getRemainingTotal(self, weeks):
-    #     return sum([self.getRemainingTotalForWeek(w) for w in weeks])
-    #
-    # def getBillTotals(self):
-    #     payed = sum(d.item_cost for d in self._billData if d.item_status == 1)
-    #     remaining = sum(d.item_cost for d in self._billData if d.item_status == 2)
-    #     return payed, remaining, payed + remaining
-    #
-    # def setWeekForBill(self, bill_id, week):
-    #     for i, d in enumerate(self._billData):
-    #         if d.item_id == bill_id:
-    #             break
-    #     self._billData[i].item_payment_week = week
-    #
-    # def getBillItemById(self, bill_id):
-    #     for d in self._billData:
-    #         if d.item_id == bill_id:
-    #             return d
-    #
-    # def getEarliestBillDate(self):
-    #     return min([d.item_date for d in self._billData],
-    #                key=lambda d: QDate.fromString(d, "dd.MM.yyyy"),
-    #                default=QDate.currentDate())
-    #
-    # def refreshData(self):
-    #     print("domain model refresh call")
-    #
-    # def addBillItem(self, newItem):
-    #     print("domain model add bill item call:", newItem)
-    #     newId = self._persistenceFacade.insertBillItem(newItem)
-    #     newItem.item_id = newId
-    #
+        self.deviceList[newId] = item
+        print(self.deviceList)
     #     self._billData.append(newItem)
     #     self._rawPlanData[newItem.item_id] = [0, 0, 0]
     #     # self.refreshPlanData()
@@ -125,7 +72,7 @@ class DomainModel(QObject):
     #
     #     self.billItemsInserted.emit(row, row)
     #     return row
-    #
+
     # def updateBillItem(self, index: QModelIndex, updatedItem: BillItem):
     #     row = index.row()
     #     print("domain model update bill item call, row:", row, updatedItem)

@@ -32,39 +32,30 @@ class MainWindow(QMainWindow):
         # self._reportManager.setEngine(self._printEngine)
 
         # persistence engine
-        # self._persistenceEngine = CsvEngine(parent=self)
         self._persistenceEngine = MysqlEngine(parent=self)
 
         # facades
         self._persistenceFacade = PersistenceFacade(parent=self, persistenceEngine=self._persistenceEngine)
         # self._uiFacade = UiFacade(parent=self, reportManager=self._reportManager)
         self._uiFacade = UiFacade(parent=self)
-        #
+
         # models
         # domain
         self._modelDomain = DomainModel(parent=self, persistenceFacade=self._persistenceFacade)
 
-        # bill list + search proxy
-        self._modelDeviceList = DeviceListModel(parent=self, domainModel=self._modelDomain)
+        # device tree + search proxy
+        self._modelDeviceTree = DeviceListModel(parent=self, domainModel=self._modelDomain)
         self._modelSearchProxy = QSortFilterProxyModel(parent=self)
-        self._modelSearchProxy.setSourceModel(self._modelDeviceList)
-        #
-        # # bill plan + search proxy
-        # self._modelBillPlan = BillPlanModel(parent=self, domainModel=self._modelDomain)
-        # self._modelPlanSearchProxy = QSortFilterProxyModel(parent=self)
-        # self._modelPlanSearchProxy.setSourceModel(self._modelBillPlan)
-        #
+        self._modelSearchProxy.setSourceModel(self._modelDeviceTree)
+
         # connect ui facade to models
         self._uiFacade.setDomainModel(self._modelDomain)
 
         # actions
         self.actRefresh = QAction("Обновить", self)
-        self.actOpenDeviceEditor = QAction("Редактор устройств", self)
-        # self.actAddBillRecord = QAction("Добавить счёт...", self)
-        # self.actEditBillRecord = QAction("Изменить счёт...", self)
-        # self.actDeleteBillRecord = QAction("Удалить счёт...", self)
-        # self.actPrint = QAction("Распечатать...", self)
-        # self.actOpenDictEditor = QAction("Словари", self)
+        self.actDeviceAdd = QAction("Добавить устройство", self)
+        self.actDeviceEdit = QAction("Изменить устройство", self)
+        self.actDeviceDelete = QAction("Удалить устройство", self)
 
     def initApp(self):
         # init instances
@@ -73,11 +64,11 @@ class MainWindow(QMainWindow):
 
         # facades
         self._persistenceFacade.initFacade()
-        # self._uiFacade.initFacade()
+        self._uiFacade.initFacade()
 
         # models
         self._modelDomain.initModel()
-        self._modelDeviceList.initModel(self._modelDeviceList.buildImportToHomebrewTree)
+        self._modelDeviceTree.initModel(self._modelDeviceTree.buildImportToHomebrewTree)
 
         # init UI
         # main table
@@ -105,10 +96,13 @@ class MainWindow(QMainWindow):
         # setup ui widget signals
         # buttons
         self.ui.radioImport.toggled.connect(self.onRadioImportToggled)
-        self.ui.btnDeviceEditor.clicked.connect(self.onBtnDeviceEditorClicked)
+        self.ui.btnDeviceAdd.clicked.connect(self.onBtnDeviceAddClicked)
+        self.ui.btnDeviceEdit.clicked.connect(self.onBtnDeviceEditClicked)
+        self.ui.btnDeviceDelete.clicked.connect(self.onBtnDeviceDeleteClicked)
 
         # tree and selection
         self.ui.treeDeviceList.selectionModel().currentChanged.connect(self.onCurrentTreeItemChanged)
+        self.ui.treeDeviceList.doubleClicked.connect(self.onTreeDoubleClicked)
 
         # search widgets
     #     self.ui.comboWeek.currentIndexChanged.connect(self.onComboWeekCurrentIndexChanged)
@@ -129,8 +123,14 @@ class MainWindow(QMainWindow):
         self.actRefresh.setStatusTip("Обновить данные")
         self.actRefresh.triggered.connect(self.procActRefresh)
 
-        self.actOpenDeviceEditor.setStatusTip("Открыть редактор устройств")
-        self.actOpenDeviceEditor.triggered.connect(self.procActOpenDeviceEditor)
+        self.actDeviceAdd.setStatusTip("Добавить устройство")
+        self.actDeviceAdd.triggered.connect(self.procActDeviceAdd)
+
+        self.actDeviceEdit.setStatusTip("Изменить устройство")
+        self.actDeviceEdit.triggered.connect(self.procActDeviceEdit)
+
+        self.actDeviceDelete.setStatusTip("Удалить устройство")
+        self.actDeviceDelete.triggered.connect(self.procActDeviceDelete)
 
     def refreshView(self):
         windowRect = self.geometry()
@@ -148,41 +148,28 @@ class MainWindow(QMainWindow):
 
     # ui events
     def onRadioImportToggled(self, checked):
-        self._modelDeviceList.clear()
+        self._modelDeviceTree.clear()
         if checked:
-            self._modelDeviceList.initModel(self._modelDeviceList.buildImportToHomebrewTree)
+            self._modelDeviceTree.initModel(self._modelDeviceTree.buildImportToHomebrewTree)
         else:
-            self._modelDeviceList.initModel(self._modelDeviceList.buildHomebrewToImportTree)
+            self._modelDeviceTree.initModel(self._modelDeviceTree.buildHomebrewToImportTree)
 
-    def onBtnDeviceEditorClicked(self):
-        self.actOpenDeviceEditor.trigger()
+    def onBtnDeviceAddClicked(self):
+        self.actDeviceAdd.trigger()
 
-    # def onBtnAddBillClicked(self):
-    #     self.actAddBillRecord.trigger()
-    #
-    # def onBtnEditBillClicked(self):
-    #     self.actEditBillRecord.trigger()
-    #
-    # def onBtnDeleteBillClicked(self):
-    #     self.actDeleteBillRecord.trigger()
-    #
-    # def onBtnDictEditorClicked(self):
-    #     self.actOpenDictEditor.trigger()
-    #
-    # def onBtnPrintClicked(self):
-    #     self.actPrint.trigger()
-    #
-    # def onTableBillDoubleClicked(self):
-    #     self.actEditBillRecord.trigger()
-    #
-    # def onTabBarCurrentChanged(self, index):
-    #     if index == 1:
-    #         self._modelDomain.buildPlanData()
-    #
+    def onBtnDeviceEditClicked(self):
+        self.actDeviceEdit.trigger()
+
+    def onBtnDeviceDeleteClicked(self):
+        self.actDeviceDelete.trigger()
+
     def onCurrentTreeItemChanged(self, cur: QModelIndex, prev: QModelIndex):
-        # currentSourceIndex = self._modelSearchProxy.mapToSource(self.ui.treeDeviceList.selectionModel().selectedIndexes()[0])
         sourceIndex = self._modelSearchProxy.mapToSource(cur)
         self.updateItemInfo(sourceIndex)
+
+    def onTreeDoubleClicked(self, index):
+        if index.column() != 0:
+            self.actDeviceEdit.trigger()
 
     # misc events
     def resizeEvent(self, event):
@@ -199,5 +186,21 @@ class MainWindow(QMainWindow):
         # self._uiFacade.requestRefresh()
         self.refreshView()
 
-    def procActOpenDeviceEditor(self):
-        self._uiFacade.requestOpenDeviceEditor()
+    def procActDeviceAdd(self):
+        self._uiFacade.requestDeviceAdd()
+
+    def procActDeviceEdit(self):
+        if not self.ui.treeDeviceList.selectionModel().hasSelection():
+            QMessageBox.information(self, "Ошибка!", "Выберите запись о приборе для редактирования.")
+            return False
+
+        selectedIndex = self.ui.treeDeviceList.selectionModel().selectedIndexes()[0]
+        self._uiFacade.requestDeviceEdit(self._modelSearchProxy.mapToSource(selectedIndex))
+
+    def procActDeviceDelete(self):
+        if not self.ui.treeDeviceList.selectionModel().hasSelection():
+            QMessageBox.information(self, "Ошибка!", "Выберите запись о приборе для удаления.")
+            return False
+
+        selectedIndex = self.ui.treeDeviceList.selectionModel().selectedIndexes()[0]
+        self._uiFacade.requestDeviceDelete(self._modelSearchProxy.mapToSource(selectedIndex))

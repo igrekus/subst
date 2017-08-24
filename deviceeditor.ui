@@ -1,77 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>dlgDeviceEditor</class>
+ <widget class="QDialog" name="dlgDeviceEditor">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>695</width>
-    <height>499</height>
+    <width>598</width>
+    <height>468</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_2">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="QGroupBox" name="grpDevices">
-     <property name="title">
-      <string>Список устройств</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QListView" name="listDevices">
-        <property name="minimumSize">
-         <size>
-          <width>200</width>
-          <height>0</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="btnAddDevice">
-          <property name="text">
-           <string>Добавить</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="btnRemoveDevice">
-          <property name="text">
-           <string>Удалить</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <layout class="QVBoxLayout" name="verticalLayout_4">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QGroupBox" name="grpSpec">
        <property name="title">
         <string>Параметры</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="QLabel" name="lblName">
           <property name="text">
@@ -80,7 +30,14 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="editName"/>
+         <widget class="QLineEdit" name="editName">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QLabel" name="lblVendor">
@@ -100,7 +57,14 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="editDecs"/>
+         <widget class="QLineEdit" name="editDesc">
+          <property name="minimumSize">
+           <size>
+            <width>300</width>
+            <height>0</height>
+           </size>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QLabel" name="lblSpec">
@@ -115,14 +79,14 @@
         <item>
          <widget class="QRadioButton" name="radioImport">
           <property name="text">
-           <string>Импортное</string>
+           <string>Импортный</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QRadioButton" name="radioHomebrew">
           <property name="text">
-           <string>Отечестченное</string>
+           <string>Отечественный</string>
           </property>
          </widget>
         </item>
@@ -133,6 +97,12 @@
       <widget class="QGroupBox" name="groupBox">
        <property name="title">
         <string>Список аналогов</string>
+       </property>
+       <property name="flat">
+        <bool>false</bool>
+       </property>
+       <property name="checkable">
+        <bool>false</bool>
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
@@ -193,8 +163,56 @@
      </item>
     </layout>
    </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnOk">
+       <property name="text">
+        <string>Сохранить</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnCancel">
+       <property name="text">
+        <string>Отменить</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>btnCancel</sender>
+   <signal>clicked()</signal>
+   <receiver>dlgDeviceEditor</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>706</x>
+     <y>487</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>377</x>
+     <y>254</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
