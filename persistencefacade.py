@@ -32,18 +32,20 @@ class PersistenceFacade(QObject):
     def getVendorDict(self):
         return {v[0]: [v[1], v[2]] for v in self._engine.fetchVendorList()}
 
-    def insertDeviceItem(self, item: DeviceItem):
+    def insertDeviceItem(self, item: DeviceItem, mapping: set):
         print("persistence facade insert device item call:", item)
-        return self._engine.insertDeviceRecord(item.toTuple())
+        # TODO: persist device and map
+        return self._engine.insertDeviceRecord(item.toTuple(), mapping)
 
-    # def updateBillItem(self, item: BillItem):
-    #     print("persistence facade update call:", item)
-    #     self._engine.updateBillRecord(item.toTuple())
-    #
-    # def deleteBillItem(self, item):
-    #     print("persistence facade delete call:", item)
-    #     self._engine.deleteBillRecord(item)
-    #
+    def updateDeviceItem(self, item: DeviceItem, mapping: set):
+        print("persistence facade update device item call:", item)
+        # TODO: perisit device and map
+        self._engine.updateDeviceRecord(item.toTuple(), mapping)
+
+    def deleteDeviceItem(self, item: DeviceItem):
+        print("persistence facade delete item call:", item)
+        self._engine.deleteDeviceRecord(item.toTuple())
+
     # def persistPlanData(self, data):
     #     print("persistence facade persist plan data call")
     #     return self._engine.updatePlanData([tuple([v[0], v[1], v[2], k]) for k, v in data.items()])

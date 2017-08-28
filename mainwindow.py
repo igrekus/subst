@@ -68,7 +68,8 @@ class MainWindow(QMainWindow):
 
         # models
         self._modelDomain.initModel()
-        self._modelDeviceTree.initModel(self._modelDeviceTree.buildImportToHomebrewTree)
+        self._modelDeviceTree.treeType = 1
+        # self._modelDeviceTree.initModel(self._modelDeviceTree.buildImportToHomebrewTree)
 
         # init UI
         # main table
@@ -148,11 +149,10 @@ class MainWindow(QMainWindow):
 
     # ui events
     def onRadioImportToggled(self, checked):
-        self._modelDeviceTree.clear()
         if checked:
-            self._modelDeviceTree.initModel(self._modelDeviceTree.buildImportToHomebrewTree)
+            self._modelDeviceTree.treeType = 1
         else:
-            self._modelDeviceTree.initModel(self._modelDeviceTree.buildHomebrewToImportTree)
+            self._modelDeviceTree.treeType = 2
 
     def onBtnDeviceAddClicked(self):
         self.actDeviceAdd.trigger()

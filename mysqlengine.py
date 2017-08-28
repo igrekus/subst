@@ -44,50 +44,61 @@ class MysqlEngine(QObject):
     def initEngine(self):
         print("init mysql engine")
         ok, err = self.connectToDatabase()
+        print("init", ok, err)
 
     def execSimpleQuery(self, string):
-        cur = self._connection.cursor()
-        cur.execute(string)
+        with self._connection:
+            cur = self._connection.cursor()
+            cur.execute(string)
+
         print("query:", cur._last_executed, "| rows:", cur.rowcount)
-        return cur.fetchall()
+        return cur
+
+    def execParametrizedQuery(self, string, param):
+        with self._connection:
+            cur = self._connection.cursor()
+            cur.execute(string, param)
+
+        print("query:", cur._last_executed, "| rows:", cur.rowcount)
+        return cur
+
+    def execBulkQuery(self, string, paramlist):
+        with self._connection:
+            cur = self._connection.cursor()
+            cur.executemany(string, paramlist)
+
+        print("query:", cur._last_executed, "| rows:", cur.rowcount)
+        return cur
 
     def fetchDeviceList(self):
-        return self.execSimpleQuery("CALL getDeviceList()")
+        return self.execSimpleQuery("CALL getDeviceList()").fetchall()
 
     def fetchSubstMap(self):
-        return self.execSimpleQuery("CALL getSubstMap()")
+        return self.execSimpleQuery("CALL getSubstMap()").fetchall()
 
     def fetchVendorList(self):
-        return self.execSimpleQuery("CAll getVendorList()")
+        return self.execSimpleQuery("CAll getVendorList()").fetchall()
 
-    def insertDeviceRecord(self, data):
-        print("mysql engine insert device record:", data)
-        return 100
-    #     with self._connection:
-    #     # try:
-    #     #     print("begin insert bill")
-    #         cursor = self._connection.execute(" INSERT INTO bill "
-    #                                           "      ( bill_date"
-    #                                           "      , bill_name"
-    #                                           "      , bill_category"
-    #                                           "      , bill_vendor"
-    #                                           "      , bill_cost"
-    #                                           "      , bill_project"
-    #                                           "      , bill_desc"
-    #                                           "      , bill_shipment_time"
-    #                                           "      , bill_status"
-    #                                           "      , bill_priority"
-    #                                           "      , bill_shipment_date"
-    #                                           "      , bill_shipment_status"
-    #                                           "      , bill_week"
-    #                                           "      , bill_note"
-    #                                           "      , archive"
-    #                                           "      , bill_id)"
-    #                                           " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL)", data[:-1])
-    #     # except sqlite3.Error as e:
-    #     #     print(e.args[0])
-    #     #     print("end insert bill")
-    #     rec_id = cursor.lastrowid
+    def insertDeviceRecord(self, data, mapping):
+        print("mysql engine insert device record:", data, mapping)
+        q = " INSERT INTO device" \
+            "      ( device_name" \
+            "      , device_vendorRef" \
+            "      , device_description" \
+            "      , device_spec" \
+            "      , device_tags" \
+            "      , device_origin" \
+            "      , archive" \
+            "      , device_id)" \
+            " VALUES (?, ?, ?, ?, ?, ?, 0, NULL)"
+        print(q, [data[:-1]], mapping)
+
+        # cursor = self.execParametrizedQuery(q, data[:-1])
+        # rec_id = cursor.lastrowid
+        rec_id = 100
+        subs = [(rec_id, m) for m in mapping]
+        print(subs)
+
     #     # print("begin insert plan")
     #     cursor = self._connection.execute(" INSERT INTO bill_plan"
     #                                       "           ( plan_id"
@@ -99,14 +110,18 @@ class MysqlEngine(QObject):
     #         # print("end insert plan")
     #     return rec_id
 
-    # def deleteBillRecord(self, record: BillItem):
-    #     print("sqlite engine delete bill record:", record)
+    def updateDeviceRecord(self, item, mapping):
+        print("mysql engine update device:", item)
+
+    def deleteDeviceRecord(self, item):
+        print("mysql engine delete device:", item)
     #     with self._connection:
     #         cursor = self._connection.cursor()
     #         cursor.execute("UPDATE bill"
     #                        "   SET archive = 1 "
     #                        " WHERE bill_id = ?", (record.item_id, ))
     #
+
     # def updatePlanData(self, data):
     #     # TODO error handling
     #     print("sqlite engine update plan data...")

@@ -50,7 +50,11 @@ class DeviceListModel(QAbstractItemModel):
 
         self.rootNode = TreeNode(None, None)
 
-        self.treeType = 1  # 1=import-home, 2=home-import
+        self._treeType = 1  # 1=import-home, 2=home-import
+
+        self._modelDomain.deviceAdded.connect(self.deviceAdded)
+        self._modelDomain.deviceUpdated.connect(self.deviceUpdated)
+        self._modelDomain.deviceRemoved.connect(self.deviceRemoved)
 
     def clear(self):
 
@@ -73,12 +77,12 @@ class DeviceListModel(QAbstractItemModel):
                 n.appendChild(TreeNode(self._modelDomain.getItemById(i).item_id, n))
 
     def buildImportToHomebrewTree(self):
-        self.treeType = 1
+        self._treeType = 1
         self.buildFirstLevel(data=self._modelDomain.deviceList, origin=1)
         self.buildSecondLevel(mapping=self._modelDomain.importToHomebrew)
 
     def buildHomebrewToImportTree(self):
-        self.treeType = 2
+        self._treeType = 2
         self.buildFirstLevel(data=self._modelDomain.deviceList, origin=2)
         self.buildSecondLevel(mapping=self._modelDomain.homebrewToImport)
 
@@ -202,14 +206,45 @@ class DeviceListModel(QAbstractItemModel):
     #     f = super(DeviceListModel, self).flags(index)
     #     return f
 
-    @pyqtSlot(int, int)
-    def itemsInserted(self, first: int, last: int):
-        self.beginInsertRows(QModelIndex(), first, last)
-        # print("table model slot:", first, last)
-        self.endInsertRows()
+    @pyqtSlot(int)
+    def deviceAdded(self, newId: int):
+        # TODO: if performance issues -- don't rebuild the whole tree, just add inserted item
+        print("device added slot:", newId, self._treeType)
+        if self._treeType == 1:
+            self.initModel(self.buildImportToHomebrewTree)
+        elif self._treeType == 2:
+            self.initModel(self.buildHomebrewToImportTree)
 
-    @pyqtSlot(int, int)
-    def itemsRemoved(self, first: int, last: int):
-        self.beginRemoveRows(QModelIndex(), first, last)
-        # print("table model slot:", first, last)
-        self.endRemoveRows()
+    @pyqtSlot(int)
+    def deviceUpdated(self, devId: int):
+        print("device updated slot:", devId)
+        self.treeType = self._treeType
+
+    @pyqtSlot(int)
+    def deviceRemoved(self, devId: int):
+        print("device removed slot:", devId)
+        self.treeType = self._treeType
+
+    @property
+    def treeType(self):
+        return self._treeType
+
+    @treeType.setter
+    def treeType(self, treetype: int):
+        self._treeType = treetype
+        if treetype == 1:
+            self.initModel(self.buildImportToHomebrewTree)
+        elif treetype == 2:
+            self.initModel(self.buildHomebrewToImportTree)
+
+    # @pyqtSlot(int, int)
+    # def itemsInserted(self, first: int, last: int):
+    #     self.beginInsertRows(QModelIndex(), first, last)
+    #     # print("table model slot:", first, last)
+    #     self.endInsertRows()
+    #
+    # @pyqtSlot(int, int)
+    # def itemsRemoved(self, first: int, last: int):
+    #     self.beginRemoveRows(QModelIndex(), first, last)
+    #     # print("table model slot:", first, last)
+    #     self.endRemoveRows()

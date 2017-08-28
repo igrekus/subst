@@ -32,10 +32,10 @@ class DeviceItem:
                    origin=sql_tuple[6])
 
     def toTuple(self):
-        return tuple([self.item_id,
-                      self.item_name,
+        return tuple([self.item_name,
                       self.item_vendor,
                       self.item_desc,
                       self.item_spec,
                       self.item_tags,
-                      self.item_origin])
+                      self.item_origin,
+                      self.item_id])

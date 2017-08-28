@@ -33,24 +33,29 @@ class UiFacade(QObject):
 
     def requestDeviceAdd(self):
         print("ui facade add device request")
-        dialog = DeviceEditor(domainModel=self._domainModel, data=DeviceItem())  # empty dialog for new item
+        dialog = DeviceEditor(domainModel=self._domainModel, data=DeviceItem(), mapping=list())  # empty dialog for new item
 
         if dialog.exec() != QDialog.Accepted:
             return
 
-        newItem = dialog.getData()
-        self._domainModel.addDeviceItem(newItem)
+        newItem, mapping = dialog.getData()
+        self._domainModel.addDeviceItem(newItem, mapping)
 
     def requestDeviceEdit(self, index: QModelIndex):
         item = self._domainModel.getItemById(index.data(const.RoleNodeId))
         print("ui facade edit device request", item)
-        dialog = DeviceEditor(domainModel=self._domainModel, data=item)
+        if item.item_origin == 1:
+            mp = self._domainModel.importToHomebrew
+        if item.item_origin == 2:
+            mp = self._domainModel.homebrewToImport
+
+        dialog = DeviceEditor(domainModel=self._domainModel, data=item, mapping=mp[item.item_id])
 
         if dialog.exec() != QDialog.Accepted:
             return
 
-        item = dialog.getData()
-        print("dialog edit accept:", item)
+        item, mapping = dialog.getData()
+        self._domainModel.updateDeviceItem(item, mapping)
 
     def requestDeviceDelete(self, index: QModelIndex):
         item = self._domainModel.getItemById(index.data(const.RoleNodeId))
@@ -61,7 +66,7 @@ class UiFacade(QObject):
         if result != QMessageBox.Yes:
             return
 
-        print("dialog delete accept:", item)
+        self._domainModel.deleteDeviceItem(item)
 
     # def requestExit(self, index):
     #     # TODO make settings class if needed, only current week is saved for now

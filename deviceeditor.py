@@ -2,13 +2,14 @@ import const
 from copy import copy
 from PyQt5 import uic
 from PyQt5.QtWidgets import QDialog, QMessageBox, QInputDialog, QLineEdit
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QModelIndex, QVariant
 
 from deviceitem import DeviceItem
+from mapmodel import MapModel
 
 
 class DeviceEditor(QDialog):
-    def __init__(self, parent=None, domainModel=None, data: DeviceItem=None):
+    def __init__(self, parent=None, domainModel=None, data: DeviceItem=None, mapping: list=None):
         super(DeviceEditor, self).__init__(parent)
 
         self.setAttribute(Qt.WA_QuitOnClose)
@@ -20,8 +21,10 @@ class DeviceEditor(QDialog):
 
         # instance variables
         self._modelDomain = domainModel
+        self.substModel = MapModel(self, {m: self._modelDomain.deviceMapModel.getData(m) for m in mapping})
 
         self._data = data
+        self._substList = list()
 
         self.initDialog()
 
@@ -31,6 +34,7 @@ class DeviceEditor(QDialog):
 
     def initDialog(self):
         self.ui.comboVendor.setModel(self._modelDomain.vendorMapModel)
+        self.ui.listSubst.setModel(self.substModel)
 
         if self._data.item_id is None:
             self.setWindowTitle("Добавить устройство")
@@ -57,9 +61,27 @@ class DeviceEditor(QDialog):
 
     def onBtnAddSubstClicked(self):
         print("add subst")
+        txt, ok = QInputDialog.getItem(self, "Добавить аналог", "Приборы:",
+                                       self._modelDomain.deviceMapModel.strList, 0, False)
+
+        if not ok:
+            return
+
+        self.substModel.addItem(self._modelDomain.deviceMapModel.getId(txt), txt)
 
     def onBtnRemoveSubstClicked(self):
-        print("remove subst")
+        if not self.ui.listSubst.selectionModel().hasSelection():
+            QMessageBox.information(self, "Ошибка!", "Выберите аналог для удаления из списка.")
+            return False
+
+        print("remove subst:", self.ui.listSubst.selectionModel().currentIndex().data(const.RoleNodeId))
+        result = QMessageBox.question(self, "Внимание!",
+                                      "Вы хотите удалить аналог?")
+
+        if result != QMessageBox.Yes:
+            return
+
+        self.substModel.removeItem(self.ui.listSubst.selectionModel().currentIndex().data(const.RoleNodeId))
 
     def verifyInput(self):
         print("verifying user input")
@@ -93,11 +115,17 @@ class DeviceEditor(QDialog):
                                 vendor=self.ui.comboVendor.currentData(const.RoleNodeId),
                                 desc=self.ui.editDesc.text(),
                                 spec=self.ui.textSpec.toPlainText(),
-                                tags=None,
+                                tags="",
                                 origin=origin)
 
+        self._substList = {self.substModel.data(self.substModel.index(row, 0), const.RoleNodeId).value()
+                           for row in range(self.substModel.rowCount(QModelIndex()))}
+
+        if self._data.item_id in self._substList:
+            self._substList.remove(self._data.item_id)
+
     def getData(self):
-        return self._data
+        return self._data, self._substList
 
     def onBtnOkClicked(self):
         if self.verifyInput():
