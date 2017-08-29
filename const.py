@@ -15,3 +15,4 @@ COLOR_ARRIVAL_PARTIAL = 0xffFF9462
 COLOR_ARRIVAL_RECLAIM = 0xffFF6767
 
 RoleNodeId = Qt.UserRole + 1
+RoleVendor = RoleNodeId + 1

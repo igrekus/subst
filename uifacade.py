@@ -44,12 +44,9 @@ class UiFacade(QObject):
     def requestDeviceEdit(self, index: QModelIndex):
         item = self._domainModel.getItemById(index.data(const.RoleNodeId))
         print("ui facade edit device request", item)
-        if item.item_origin == 1:
-            mp = self._domainModel.importToHomebrew
-        if item.item_origin == 2:
-            mp = self._domainModel.homebrewToImport
 
-        dialog = DeviceEditor(domainModel=self._domainModel, data=item, mapping=mp[item.item_id])
+        dialog = DeviceEditor(domainModel=self._domainModel, data=item,
+                              mapping=self._domainModel.substMap[item.item_id])
 
         if dialog.exec() != QDialog.Accepted:
             return

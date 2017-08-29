@@ -56,8 +56,12 @@ class MysqlEngine(QObject):
 
     def execParametrizedQuery(self, string, param):
         with self._connection:
+        # try:
             cur = self._connection.cursor()
             cur.execute(string, param)
+
+        # except Exception as e:
+        #     print(e)
 
         print("query:", cur._last_executed, "| rows:", cur.rowcount)
         return cur
@@ -81,40 +85,38 @@ class MysqlEngine(QObject):
 
     def insertDeviceRecord(self, data, mapping):
         print("mysql engine insert device record:", data, mapping)
-        q = " INSERT INTO device" \
-            "      ( device_name" \
-            "      , device_vendorRef" \
-            "      , device_description" \
-            "      , device_spec" \
-            "      , device_tags" \
-            "      , device_origin" \
-            "      , archive" \
-            "      , device_id)" \
-            " VALUES (?, ?, ?, ?, ?, ?, 0, NULL)"
-        print(q, [data[:-1]], mapping)
 
-        # cursor = self.execParametrizedQuery(q, data[:-1])
-        # rec_id = cursor.lastrowid
-        rec_id = 100
-        subs = [(rec_id, m) for m in mapping]
-        print(subs)
+        q = "CALL insertDevice(%s, %s, %s, %s, %s, %s)"
+        # print(q, data[:-1])
+        cursor = self.execParametrizedQuery(q, data[:-1])
+        rec_id = cursor.fetchone()[0]
 
-    #     # print("begin insert plan")
-    #     cursor = self._connection.execute(" INSERT INTO bill_plan"
-    #                                       "           ( plan_id"
-    #                                       "           , plan_billRef"
-    #                                       "           , plan_year"
-    #                                       "           , plan_week"
-    #                                       "           , plan_active)"
-    #                                       "      VALUES (NULL, ?, 0, 0, 0)", (rec_id, ))
-    #         # print("end insert plan")
-    #     return rec_id
+        q = "CALL insertMapping(%s, %s)"
+        # print(q, (rec_id, mapping,))
+        self.execParametrizedQuery(q, (rec_id, mapping, ))
 
-    def updateDeviceRecord(self, item, mapping):
+        return rec_id
+
+    def appendDeviceMapping(self, mappings):
+        q = "CALL appendDeviceMapping(%s, %s)"
+        for m in mappings:
+            self.execParametrizedQuery(q, m)
+
+    def updateDeviceRecord(self, item):
         print("mysql engine update device:", item)
+        q = "CALL updateDevice(%s, %s, %s, %s, %s, %s, %s)"
+        self.execParametrizedQuery(q, item)
+
+    def updateDeviceMappings(self, mappings):
+        print("mysql engine update device mappings:", mappings)
+        q = "CALL updateDeviceMapping(%s, %s)"
+        for m in mappings:
+            self.execParametrizedQuery(q, m)
 
     def deleteDeviceRecord(self, item):
         print("mysql engine delete device:", item)
+        q = "CALL deleteDevice(%s)"
+        self.execParametrizedQuery(q, item[-1])
     #     with self._connection:
     #         cursor = self._connection.cursor()
     #         cursor.execute("UPDATE bill"

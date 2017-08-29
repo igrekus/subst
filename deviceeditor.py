@@ -89,6 +89,10 @@ class DeviceEditor(QDialog):
             QMessageBox.information(self, "Ошибка!", "Введите наименование прибора.")
             return False
 
+        if self.ui.comboVendor.currentIndex() == 0:
+            QMessageBox.information(self, "Ошибка!", "Выберите производителя прибора.")
+            return False
+
         # if not self.ui.editDesc.text():
         #     QMessageBox.information(self, "Ошибка!", "Введите описание прибора.")
         #     return False

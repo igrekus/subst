@@ -20,31 +20,51 @@ class PersistenceFacade(QObject):
         return {r[0]: DeviceItem.fromSqlTuple(r) for r in self._engine.fetchDeviceList()}
 
     def getSubstMap(self):
-        importToHomebrew = defaultdict(list)
-        homebrewToImport = defaultdict(list)
-
+        substmap = defaultdict(set)
         for r in self._engine.fetchSubstMap():
-            importToHomebrew[r[0]].append(r[1])
-            homebrewToImport[r[1]].append(r[0])
-
-        return importToHomebrew, homebrewToImport
+            for s in r[1].split(","):
+                if s:
+                    substmap[r[0]].add(int(s))
+        return substmap
 
     def getVendorDict(self):
         return {v[0]: [v[1], v[2]] for v in self._engine.fetchVendorList()}
 
     def insertDeviceItem(self, item: DeviceItem, mapping: set):
-        print("persistence facade insert device item call:", item)
-        # TODO: persist device and map
-        return self._engine.insertDeviceRecord(item.toTuple(), mapping)
+        print("persistence facade insert device item call:", item, mapping)
+        string = str()
+        for m in mapping:
+            string += str(m) + ","
 
-    def updateDeviceItem(self, item: DeviceItem, mapping: set):
+        newId = self._engine.insertDeviceRecord(item.toTuple(), string.strip(","))
+
+        update_list = list()
+        for m in mapping:
+            update_list.append((m, "," + str(newId), ))
+
+        self._engine.appendDeviceMapping(update_list)
+        return newId
+
+    def updateDeviceItem(self, item: DeviceItem, affected_maps: dict):
         print("persistence facade update device item call:", item)
-        # TODO: perisit device and map
-        self._engine.updateDeviceRecord(item.toTuple(), mapping)
+        self._engine.updateDeviceRecord(item.toTuple())
+        self.updateAffectedMaps(affected_maps)
 
-    def deleteDeviceItem(self, item: DeviceItem):
+    def updateAffectedMaps(self, maps: dict):
+        print("persistence facade update affected maps call:", maps)
+        tmplist = list()
+        for k, v in maps.items():
+            string = str()
+            for i in v:
+                string += str(i) + ","
+            tmplist.append((k, string.strip(","), ))
+
+        self._engine.updateDeviceMappings(tmplist)
+
+    def deleteDeviceItem(self, item: DeviceItem, affected_maps: dict):
         print("persistence facade delete item call:", item)
         self._engine.deleteDeviceRecord(item.toTuple())
+        self.updateAffectedMaps(affected_maps)
 
     # def persistPlanData(self, data):
     #     print("persistence facade persist plan data call")

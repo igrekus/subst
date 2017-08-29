@@ -57,7 +57,6 @@ class DeviceListModel(QAbstractItemModel):
         self._modelDomain.deviceRemoved.connect(self.deviceRemoved)
 
     def clear(self):
-
         def clearTreeNode(node):
             if node.childNodes:
                 for n in node.childNodes:
@@ -76,22 +75,16 @@ class DeviceListModel(QAbstractItemModel):
             for i in mapping[n.data]:
                 n.appendChild(TreeNode(self._modelDomain.getItemById(i).item_id, n))
 
-    def buildImportToHomebrewTree(self):
-        self._treeType = 1
-        self.buildFirstLevel(data=self._modelDomain.deviceList, origin=1)
-        self.buildSecondLevel(mapping=self._modelDomain.importToHomebrew)
+    def buildTree(self):
+        self.buildFirstLevel(data=self._modelDomain.deviceList, origin=self._treeType)
+        self.buildSecondLevel(mapping=self._modelDomain.substMap)
 
-    def buildHomebrewToImportTree(self):
-        self._treeType = 2
-        self.buildFirstLevel(data=self._modelDomain.deviceList, origin=2)
-        self.buildSecondLevel(mapping=self._modelDomain.homebrewToImport)
-
-    def initModel(self, buildFunc):
+    def initModel(self):
         print("init tree model")
         self.beginResetModel()
         self.clear()
         self.rootNode = TreeNode(None, None)
-        buildFunc()
+        self.buildTree()
         self.endResetModel()
 
     def headerData(self, section, orientation, role=None):
@@ -200,6 +193,9 @@ class DeviceListModel(QAbstractItemModel):
         elif role == const.RoleNodeId:
             return QVariant(item.item_id)
 
+        elif role == const.RoleVendor:
+            return QVariant(item.item_vendor)
+
         return QVariant()
 
     # def flags(self, index):
@@ -210,10 +206,7 @@ class DeviceListModel(QAbstractItemModel):
     def deviceAdded(self, newId: int):
         # TODO: if performance issues -- don't rebuild the whole tree, just add inserted item
         print("device added slot:", newId, self._treeType)
-        if self._treeType == 1:
-            self.initModel(self.buildImportToHomebrewTree)
-        elif self._treeType == 2:
-            self.initModel(self.buildHomebrewToImportTree)
+        self.initModel()
 
     @pyqtSlot(int)
     def deviceUpdated(self, devId: int):
@@ -232,10 +225,7 @@ class DeviceListModel(QAbstractItemModel):
     @treeType.setter
     def treeType(self, treetype: int):
         self._treeType = treetype
-        if treetype == 1:
-            self.initModel(self.buildImportToHomebrewTree)
-        elif treetype == 2:
-            self.initModel(self.buildHomebrewToImportTree)
+        self.initModel()
 
     # @pyqtSlot(int, int)
     # def itemsInserted(self, first: int, last: int):

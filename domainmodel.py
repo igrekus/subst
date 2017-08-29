@@ -1,4 +1,5 @@
 import copy
+from collections import defaultdict
 from deviceitem import DeviceItem
 from mapmodel import MapModel
 from PyQt5.QtCore import QObject, QModelIndex, pyqtSignal, QDate
@@ -18,10 +19,7 @@ class DomainModel(QObject):
         self._persistenceFacade = persistenceFacade
 
         self.deviceList = dict()
-        # TODO: first priority:
-        # TODO: make set, merge mappings into one, discern by item.item_origin
-        self.importToHomebrew = dict()
-        self.homebrewToImport = dict()
+        self.substMap = dict()
 
         self.vendorList = dict()
 
@@ -33,6 +31,7 @@ class DomainModel(QObject):
 
     def builVendorMapModel(self):
         self.vendorMapModel = MapModel(self, {k: v[0] for k, v in self.vendorList.items()})
+        self.vendorMapModel.addItemAtPosition(0, 0, "Все")
 
     def buildMapModels(self):
         print("building map models")
@@ -42,7 +41,7 @@ class DomainModel(QObject):
     def initModel(self):
         print("init domain model")
         self.deviceList = self._persistenceFacade.getDeviceList()
-        self.importToHomebrew, self.homebrewToImport = self._persistenceFacade.getSubstMap()
+        self.substMap = self._persistenceFacade.getSubstMap()
         self.vendorList = self._persistenceFacade.getVendorDict()
         self.buildMapModels()
 
@@ -63,14 +62,9 @@ class DomainModel(QObject):
 
         self.deviceList[newId] = item
 
-        if item.item_origin == 1:
-            self.importToHomebrew[newId] = list(mapping)
-            for m in mapping:
-                self.homebrewToImport[m].append(newId)
-        elif item.item_origin == 2:
-            self.homebrewToImport[newId] = list(mapping)
-            for m in mapping:
-                self.importToHomebrew[m].append(newId)
+        self.substMap[newId] = mapping
+        for m in mapping:
+            self.substMap[m].add(newId)
 
         self.deviceMapModel.addItem(newId, item.item_name)
 
@@ -78,31 +72,21 @@ class DomainModel(QObject):
 
     def updateDeviceItem(self, item: DeviceItem, mapping: set):
         print("domain model update device item call:", item)
-        self._persistenceFacade.updateDeviceItem(item, mapping)
 
         self.deviceList[item.item_id] = item
 
-        # TODO: refactor this after making map into a set
-        if item.item_origin == 1:
-            self.importToHomebrew[item.item_id] = list(mapping)
-            for v in self.homebrewToImport.values():
-                if item.item_id in v and item.item_id not in mapping:
-                    v.remove(item.item_id)
-            for m in mapping:
-                tmpset = set(self.homebrewToImport[m])
-                tmpset.add(item.item_id)
-                self.homebrewToImport[m] = list(tmpset)
+        self.substMap[item.item_id] = mapping
+        affected_maps = dict()
+        affected_maps[item.item_id] = self.substMap[item.item_id]
+        for k, v in self.substMap.items():
+            if item.item_id in v and item.item_id not in mapping:
+                v.remove(item.item_id)
+                affected_maps[k] = v
+        for m in mapping:
+            self.substMap[m].add(item.item_id)
+            affected_maps[m] = self.substMap[m]
 
-
-        elif item.item_origin == 2:
-            self.homebrewToImport[item.item_id] = list(mapping)
-            for v in self.importToHomebrew.values():
-                if item.item_id in v and item.item_id not in mapping:
-                    v.remove(item.item_id)
-            for m in mapping:
-                tmpset = set(self.importToHomebrew[m])
-                tmpset.add(item.item_id)
-                self.importToHomebrew[m] = list(tmpset)
+        self._persistenceFacade.updateDeviceItem(item, affected_maps)
 
         self.deviceMapModel.updateItem(item.item_id, item.item_name)
 
@@ -110,19 +94,17 @@ class DomainModel(QObject):
 
     def deleteDeviceItem(self, item: DeviceItem):
         print("domain model delete device item call:", item)
-        self._persistenceFacade.deleteDeviceItem(item)
 
         self.deviceList.pop(item.item_id, 0)
-        self.importToHomebrew.pop(item.item_id, 0)
-        self.homebrewToImport.pop(item.item_id, 0)
+        self.substMap.pop(item.item_id, 0)
 
-        for v in self.importToHomebrew.values():
+        affected_maps = dict()
+        for k, v in self.substMap.items():
             if item.item_id in v:
                 v.remove(item.item_id)
+                affected_maps[k] = v
 
-        for v in self.homebrewToImport.values():
-            if item.item_id in v:
-                v.remove(item.item_id)
+        self._persistenceFacade.deleteDeviceItem(item, affected_maps)
 
         self.deviceMapModel.removeItem(item.item_id)
 

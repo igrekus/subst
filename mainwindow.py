@@ -1,8 +1,9 @@
-import const
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QAbstractItemView, QAction, QMessageBox, QTreeView
 from PyQt5.QtCore import Qt, QSortFilterProxyModel, QModelIndex
 
+import const
+from devicesearchproxymodel import DeviceSearchProxyModel
 from domainmodel import DomainModel
 from devicelistmodel import DeviceListModel
 from mysqlengine import MysqlEngine
@@ -45,7 +46,8 @@ class MainWindow(QMainWindow):
 
         # device tree + search proxy
         self._modelDeviceTree = DeviceListModel(parent=self, domainModel=self._modelDomain)
-        self._modelSearchProxy = QSortFilterProxyModel(parent=self)
+        # self._modelSearchProxy = QSortFilterProxyModel(parent=self)
+        self._modelSearchProxy = DeviceSearchProxyModel(parent=self)
         self._modelSearchProxy.setSourceModel(self._modelDeviceTree)
 
         # connect ui facade to models
@@ -69,7 +71,6 @@ class MainWindow(QMainWindow):
         # models
         self._modelDomain.initModel()
         self._modelDeviceTree.treeType = 1
-        # self._modelDeviceTree.initModel(self._modelDeviceTree.buildImportToHomebrewTree)
 
         # init UI
         # main table
@@ -82,15 +83,11 @@ class MainWindow(QMainWindow):
         self.ui.treeDeviceList.setUniformRowHeights(True)
         self.ui.treeDeviceList.header().setHighlightSections(False)
         self.ui.treeDeviceList.header().setStretchLastSection(True)
+        self.ui.treeDeviceList.setColumnHidden(5, True)
 
     #     # setup filter widgets
-    #     self.ui.comboProjectFilter.setModel(self._modelDomain.dicts["project"])
-    #     self.ui.comboStatusFilter.setModel(self._modelDomain.dicts["status"])
-    #     self.ui.comboPriorityFilter.setModel(self._modelDomain.dicts["priority"])
-    #     self.ui.comboShipmentFilter.setModel(self._modelDomain.dicts["shipment"])
-    #     self.ui.dateFromFilter.setDate(QDate.fromString(self._modelDomain.getEarliestBillDate(), "dd.MM.yyyy"))
-    #     self.ui.dateUntilFilter.setDate(QDate.currentDate())
-    #
+        self.ui.comboVendorFilter.setModel(self._modelDomain.vendorMapModel)
+
         # create actions
         self.initActions()
 
@@ -106,18 +103,10 @@ class MainWindow(QMainWindow):
         self.ui.treeDeviceList.doubleClicked.connect(self.onTreeDoubleClicked)
 
         # search widgets
-    #     self.ui.comboWeek.currentIndexChanged.connect(self.onComboWeekCurrentIndexChanged)
-    #     self.ui.editSearch.textChanged.connect(self.setSearchFilter)
-    #     self.ui.comboProjectFilter.currentIndexChanged.connect(self.setSearchFilter)
-    #     self.ui.comboStatusFilter.currentIndexChanged.connect(self.setSearchFilter)
-    #     self.ui.comboPriorityFilter.currentIndexChanged.connect(self.setSearchFilter)
-    #     self.ui.comboShipmentFilter.currentIndexChanged.connect(self.setSearchFilter)
-    #     self.ui.dateFromFilter.dateChanged.connect(self.setSearchFilter)
-    #     self.ui.dateUntilFilter.dateChanged.connect(self.setSearchFilter)
-    #
-    #     self.setSearchFilter()
-    #
-    #     self.ui.btnRefresh.setVisible(False)
+        self.ui.comboVendorFilter.currentIndexChanged.connect(self.setSearchFilter)
+        self.ui.editSearch.textChanged.connect(self.setSearchFilter)
+
+        # self.setSearchFilter()
 
     def initActions(self):
         self.actRefresh.setShortcut("Ctrl+R")
@@ -170,6 +159,13 @@ class MainWindow(QMainWindow):
     def onTreeDoubleClicked(self, index):
         if index.column() != 0:
             self.actDeviceEdit.trigger()
+
+    def setSearchFilter(self, dummy=0):
+        self._modelSearchProxy.filterString = self.ui.editSearch.text()
+        self._modelSearchProxy.filterVendor = self.ui.comboVendorFilter.currentData(const.RoleNodeId)
+
+        self._modelSearchProxy.invalidate()
+        # self.ui.treeDeviceList.setColumnHidden(5, True)
 
     # misc events
     def resizeEvent(self, event):
