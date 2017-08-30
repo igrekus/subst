@@ -58,6 +58,7 @@ class MainWindow(QMainWindow):
         self.actDeviceAdd = QAction("Добавить устройство", self)
         self.actDeviceEdit = QAction("Изменить устройство", self)
         self.actDeviceDelete = QAction("Удалить устройство", self)
+        self.actDictEditorOpen = QAction("Открыть редактор словарей", self)
 
     def initApp(self):
         # init instances
@@ -85,7 +86,7 @@ class MainWindow(QMainWindow):
         self.ui.treeDeviceList.header().setStretchLastSection(True)
         self.ui.treeDeviceList.setColumnHidden(5, True)
 
-    #     # setup filter widgets
+        # setup filter widgets
         self.ui.comboVendorFilter.setModel(self._modelDomain.vendorMapModel)
 
         # create actions
@@ -97,6 +98,7 @@ class MainWindow(QMainWindow):
         self.ui.btnDeviceAdd.clicked.connect(self.onBtnDeviceAddClicked)
         self.ui.btnDeviceEdit.clicked.connect(self.onBtnDeviceEditClicked)
         self.ui.btnDeviceDelete.clicked.connect(self.onBtnDeviceDeleteClicked)
+        self.ui.btnDictEditor.clicked.connect(self.onBtnDictEditorClicked)
 
         # tree and selection
         self.ui.treeDeviceList.selectionModel().currentChanged.connect(self.onCurrentTreeItemChanged)
@@ -121,6 +123,9 @@ class MainWindow(QMainWindow):
 
         self.actDeviceDelete.setStatusTip("Удалить устройство")
         self.actDeviceDelete.triggered.connect(self.procActDeviceDelete)
+
+        self.actDictEditorOpen.setStatusTip("Открыть редактор словарей")
+        self.actDictEditorOpen.triggered.connect(self.procActDictEditorOpen)
 
     def refreshView(self):
         windowRect = self.geometry()
@@ -152,6 +157,9 @@ class MainWindow(QMainWindow):
     def onBtnDeviceDeleteClicked(self):
         self.actDeviceDelete.trigger()
 
+    def onBtnDictEditorClicked(self):
+        self.actDictEditorOpen.trigger()
+
     def onCurrentTreeItemChanged(self, cur: QModelIndex, prev: QModelIndex):
         sourceIndex = self._modelSearchProxy.mapToSource(cur)
         self.updateItemInfo(sourceIndex)
@@ -165,7 +173,7 @@ class MainWindow(QMainWindow):
         self._modelSearchProxy.filterVendor = self.ui.comboVendorFilter.currentData(const.RoleNodeId)
 
         self._modelSearchProxy.invalidate()
-        # self.ui.treeDeviceList.setColumnHidden(5, True)
+        self.ui.treeDeviceList.setColumnHidden(5, True)
 
     # misc events
     def resizeEvent(self, event):
@@ -200,3 +208,6 @@ class MainWindow(QMainWindow):
 
         selectedIndex = self.ui.treeDeviceList.selectionModel().selectedIndexes()[0]
         self._uiFacade.requestDeviceDelete(self._modelSearchProxy.mapToSource(selectedIndex))
+
+    def procActDictEditorOpen(self):
+        self._uiFacade.requestDictEditorOpen()

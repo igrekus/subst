@@ -7,7 +7,7 @@ from PyQt5.QtCore import QObject, QModelIndex, pyqtSignal, QDate
 
 class DomainModel(QObject):
 
-    dict_list = ["category", "period", "priority", "project", "shipment", "status", "vendor"]
+    dict_list = ["vendor"]
 
     deviceAdded = pyqtSignal(int)
     deviceUpdated = pyqtSignal(int)
@@ -110,32 +110,27 @@ class DomainModel(QObject):
 
         self.deviceRemoved.emit(item.item_id)
 
-    # def deleteBillItem(self, index: QModelIndex):
-    #     row = index.row()
-    #     print("domain model delete bill item call, row", row)
-    #     self._persistenceFacade.deleteBillItem(self._billData[row])
-    #     del self._billData[row]
-    #     self.billItemsRemoved.emit(row, row)
-    #
-    # def savePlanData(self):
-    #     print("domain model persist plan data call")
-    #     return self._persistenceFacade.persistPlanData(self._rawPlanData)
-    #
-    # def addDictRecord(self, dictName, data):
-    #     print("domain model add dict record:", dictName, data)
-    #     newId = self._persistenceFacade.addDictRecord(dictName, data)
-    #
-    #     self.dicts[dictName].addItem(100, data)
-    #
-    # def editDictRecord(self, dictName, data):
-    #     print("domain model edit dict record:", dictName, data)
-    #     self._persistenceFacade.editDictRecord(dictName, data)
-    #
-    #     self.dicts[dictName].updateItem(data[0], data[1])
-    #
-    # def deleteDictRecord(self, dictName, data):
-    #     # TODO: check for existing references
-    #     print("domain model delete dict record:", dictName, data)
-    #     self._persistenceFacade.deleteDictRecord(dictName, data)
-    #
-    #     self.dicts[dictName].removeItem(data)
+    def addDictRecord(self, dictName, data):
+        print("domain model add dict record:", dictName, data)
+        newId = self._persistenceFacade.addDictRecord(dictName, data)
+
+        if dictName == "vendor":
+            self.vendorMapModel.addItem(newId, data)
+
+    def editDictRecord(self, dictName, data):
+        print("domain model edit dict record:", dictName, data)
+        self._persistenceFacade.editDictRecord(dictName, data)
+
+        if dictName == "vendor":
+            self.vendorMapModel.updateItem(data[0], data[1])
+
+    def deleteDictRecord(self, dictName, data):
+        print("domain model delete dict record:", dictName, data)
+        if not self._persistenceFacade.checkDictRef(dictName, data):
+
+            self._persistenceFacade.deleteDictRecord(dictName, data)
+
+            if dictName == "vendor":
+                self.vendorMapModel.removeItem(data)
+            return True
+        return False

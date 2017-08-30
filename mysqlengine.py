@@ -117,50 +117,36 @@ class MysqlEngine(QObject):
         print("mysql engine delete device:", item)
         q = "CALL deleteDevice(%s)"
         self.execParametrizedQuery(q, item[-1])
-    #     with self._connection:
-    #         cursor = self._connection.cursor()
-    #         cursor.execute("UPDATE bill"
-    #                        "   SET archive = 1 "
-    #                        " WHERE bill_id = ?", (record.item_id, ))
-    #
 
-    # def updatePlanData(self, data):
-    #     # TODO error handling
-    #     print("sqlite engine update plan data...")
-    #     with self._connection:
-    #         cursor = self._connection.cursor()
-    #         cursor.executemany("UPDATE bill_plan"
-    #                            "   SET plan_year = ? "
-    #                            "     , plan_week = ? "
-    #                            "     , plan_active = ?"
-    #                            " WHERE plan_billRef = ?", data)
-    #     print("...update end")
-    #     return True
-    #
-    # def insertDictRecord(self, dictName, data):
-    #     print("sqlite engine insert dict record:", dictName, data)
-    #
-    #     with self._connection:
-    #         cursor = self._connection.execute(" INSERT INTO " + dictName +
-    #                                           "      (" + dictName + "_id" +
-    #                                           "      , " + dictName + "_name" + ")"
-    #                                           " VALUES (NULL, ?)", data)
-    #         rec_id = cursor.lastrowid
-    #
-    #     return rec_id
-    #
-    # def updateDictRecord(self, dictName, data):
-    #     print("sqlite engine update dict record:", dictName, data)
-    #
-    #     with self._connection:
-    #         cursor = self._connection.execute(" UPDATE " + dictName +
-    #                                           "    SET " + dictName + "_name = ?" +
-    #                                           "  WHERE " + dictName + "_id = ?", data)
-    #
-    # def deleteDictRecord(self, dictName, data):
-    #     print("sqlite engine delete dict record:", dictName, data)
-    #
-    #     with self._connection:
-    #         cursor = self._connection.execute(" DELETE "
-    #                                           "   FROM " + dictName +
-    #                                           "  WHERE " + dictName + "_id = ?", data)
+    def insertDictRecord(self, dictName, data):
+        print("mysql engine insert dict record:", dictName, data)
+        with self._connection:
+            cursor = self._connection.cursor()
+            cursor.execute(" INSERT INTO " + dictName +
+                           "      (" + dictName + "_id" +
+                           "      , " + dictName + "_name" + ")"
+                           " VALUES (NULL, %s)", data)
+            rec_id = cursor.lastrowid
+        return rec_id
+
+    def updateDictRecord(self, dictName, data):
+        print("mysql engine update dict record:", dictName, data)
+        with self._connection:
+            cursor = self._connection.cursor()
+            cursor.execute(" UPDATE " + dictName +
+                           "    SET " + dictName + "_name = %s" +
+                           "  WHERE " + dictName + "_id = %s", data)
+
+    def deleteDictRecord(self, dictName, data):
+        print("mysql engine delete dict record:", dictName, data)
+        with self._connection:
+            cursor = self._connection.cursor()
+            cursor.execute(" DELETE "
+                           "   FROM " + dictName +
+                           "  WHERE " + dictName + "_id = %s", data)
+
+    def checkDictRef(self, dictName, data):
+        print("mysql engine check dict reference:", dictName, data)
+        q = "CALL check" + dictName + "Ref(%s)"
+        cur = self.execParametrizedQuery(q, (data, ))
+        return bool(cur.fetchone()[0])

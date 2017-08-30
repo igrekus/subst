@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from deviceeditor import DeviceEditor
 from deviceitem import DeviceItem
+from dicteditor import DictEditor
 
 
 class UiFacade(QObject):
@@ -64,6 +65,12 @@ class UiFacade(QObject):
             return
 
         self._domainModel.deleteDeviceItem(item)
+
+    def requestDictEditorOpen(self):
+        print("ui facade dict editor open request")
+        dialog = DictEditor(domainModel=self._domainModel)
+
+        dialog.exec()
 
     # def requestExit(self, index):
     #     # TODO make settings class if needed, only current week is saved for now

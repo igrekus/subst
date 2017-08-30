@@ -23,29 +23,42 @@ class DeviceSearchProxyModel(QSortFilterProxyModel):
         else:
             raise TypeError("Filter must be a str.")
 
-    def filterAcceptsRow(self, source_row, source_parent_index):
-        source_index = self.sourceModel().index(source_row, self.filterKeyColumn(), source_parent_index)
-        if source_index.isValid():
-            # recursive test children
-            rows = self.sourceModel().rowCount(source_index)
-            if rows > 0:
-                for i in range(rows):
-                    if self.filterAcceptsRow(i, source_index):
-                        return True
-
-            # test self
-            vendor = self.sourceModel().index(source_row, 0, source_parent_index).data(const.RoleVendor)
-            if self.filterVendor == 0 or self.filterVendor == vendor:
-                for i in range(self.sourceModel().columnCount()):
-                    if self._filterRegex.findall(str(self.sourceModel().index(source_row, i,
-                                                                              source_parent_index).data(Qt.DisplayRole))):
-                        return True
-
-            # test parents
-            parent = source_parent_index
-            while parent.isValid():
-                if self.filterAcceptsRow(parent.row(), parent.parent()):
+    def filterAcceptsSelf(self, row, parent_index):
+        vendor = self.sourceModel().index(row, 0, parent_index).data(const.RoleVendor)
+        if self.filterVendor == 0 or self.filterVendor == vendor:
+            for i in range(self.sourceModel().columnCount()):
+                string = str(self.sourceModel().index(row, i, parent_index).data(Qt.DisplayRole))
+                if self._filterRegex.findall(string):
                     return True
-                parent = parent.parent()
+        return False
+
+    def filterAcceptsAnyParent(self, parent_index):
+        parent = parent_index
+        while parent.isValid():
+            if self.filterAcceptsSelf(parent.row(), parent.parent()):
+                return True
+            parent = parent.parent()
+        return False
+
+    def hasAcceptedChildren(self, row, parent_index):
+        source_index = self.sourceModel().index(row, self.filterKeyColumn(), parent_index)
+        rows = self.sourceModel().rowCount(source_index)
+        for i in range(rows):
+            if self.filterAcceptsRow(i, source_index):
+                return True
+        return False
+
+    def filterAcceptsRow(self, source_row, source_parent_index):
+        # check self
+        if self.filterAcceptsSelf(source_row, source_parent_index):
+            return True
+
+        # check parents
+        if self.filterAcceptsAnyParent(source_parent_index):
+            return True
+
+        # check children
+        if self.hasAcceptedChildren(source_row, source_parent_index):
+            return True
 
         return False

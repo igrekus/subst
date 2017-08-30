@@ -66,18 +66,18 @@ class PersistenceFacade(QObject):
         self._engine.deleteDeviceRecord(item.toTuple())
         self.updateAffectedMaps(affected_maps)
 
-    # def persistPlanData(self, data):
-    #     print("persistence facade persist plan data call")
-    #     return self._engine.updatePlanData([tuple([v[0], v[1], v[2], k]) for k, v in data.items()])
-    #
-    # def addDictRecord(self, dictName, data):
-    #     print("persistence facade add dict record:", dictName, data)
-    #     return self._engine.insertDictRecord(dictName, (data, ))
-    #
-    # def editDictRecord(self, dictName, data):
-    #     print("persistence facade add dict record:", dictName, data)
-    #     return self._engine.updateDictRecord(dictName, (data[1], data[0]))
-    #
-    # def deleteDictRecord(self, dictName, data):
-    #     print("persistence facade add dict record:", dictName, data)
-    #     return self._engine.deleteDictRecord(dictName, (data, ))
+    def addDictRecord(self, dictName, data):
+        print("persistence facade add dict record:", dictName, data)
+        return self._engine.insertDictRecord(dictName, (data, ))
+
+    def editDictRecord(self, dictName, data):
+        print("persistence facade add dict record:", dictName, data)
+        self._engine.updateDictRecord(dictName, (data[1], data[0]))
+
+    def deleteDictRecord(self, dictName, data):
+        print("persistence facade add dict record:", dictName, data)
+        self._engine.deleteDictRecord(dictName, (data, ))
+
+    def checkDictRef(self, dictName, data):
+        print("persistence facade check dict ref:", dictName, data)
+        return self._engine.checkDictRef(dictName, data)
