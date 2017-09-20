@@ -83,10 +83,13 @@ class MysqlEngine(QObject):
     def fetchVendorList(self):
         return self.execSimpleQuery("CAll getVendorList()").fetchall()
 
+    def fetchDevtypeList(self):
+        return self.execSimpleQuery("CALL getDevtypeList()").fetchall()
+
     def insertDeviceRecord(self, data, mapping):
         print("mysql engine insert device record:", data, mapping)
 
-        q = "CALL insertDevice(%s, %s, %s, %s, %s, %s)"
+        q = "CALL insertDevice(%s, %s, %s, %s, %s, %s, %s)"
         # print(q, data[:-1])
         cursor = self.execParametrizedQuery(q, data[:-1])
         rec_id = cursor.fetchone()[0]
@@ -104,7 +107,7 @@ class MysqlEngine(QObject):
 
     def updateDeviceRecord(self, item):
         print("mysql engine update device:", item)
-        q = "CALL updateDevice(%s, %s, %s, %s, %s, %s, %s)"
+        q = "CALL updateDevice(%s, %s, %s, %s, %s, %s, %s, %s)"
         self.execParametrizedQuery(q, item)
 
     def updateDeviceMappings(self, mappings):

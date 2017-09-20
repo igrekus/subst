@@ -31,9 +31,12 @@ class DeviceEditor(QDialog):
         self.ui.btnOk.clicked.connect(self.onBtnOkClicked)
         self.ui.btnAddSubst.clicked.connect(self.onBtnAddSubstClicked)
         self.ui.btnRemoveSubst.clicked.connect(self.onBtnRemoveSubstClicked)
+        self.ui.btnAddVendor.clicked.connect(self.onBtnAddVendorClicked)
+        self.ui.btnAddDevtype.clicked.connect(self.onBtnAddDevtypeClicked)
 
     def initDialog(self):
         self.ui.comboVendor.setModel(self._modelDomain.vendorMapModel)
+        self.ui.comboDevtype.setModel(self._modelDomain.devtypeMapModel)
         self.ui.listSubst.setModel(self.substModel)
 
         if self._data.item_id is None:
@@ -46,12 +49,14 @@ class DeviceEditor(QDialog):
     def resetWidgets(self):
         self.ui.editName.setText("")
         self.ui.comboVendor.setCurrentIndex(0)
+        self.ui.comboDevtype.setCurrentIndex(0)
         self.ui.editDesc.setText("")
         self.ui.textSpec.setPlainText("")
 
     def updateWidgets(self):
         self.ui.editName.setText(self._data.item_name)
         self.ui.comboVendor.setCurrentText(self._modelDomain.vendorMapModel.getData(self._data.item_vendor))
+        self.ui.comboDevtype.setCurrentText(self._modelDomain.devtypeMapModel.getData(self._data.item_devtype))
         self.ui.editDesc.setText(self._data.item_desc)
         self.ui.textSpec.setPlainText(self._data.item_spec)
         if self._data.item_origin == 1:
@@ -93,6 +98,10 @@ class DeviceEditor(QDialog):
             QMessageBox.information(self, "Ошибка!", "Выберите производителя прибора.")
             return False
 
+        if self.ui.comboDevtype.currentIndex() == 0:
+            QMessageBox.information(self, "Ошибка!", "Выберите тип прибора.")
+            return False
+
         # if not self.ui.editDesc.text():
         #     QMessageBox.information(self, "Ошибка!", "Введите описание прибора.")
         #     return False
@@ -117,14 +126,17 @@ class DeviceEditor(QDialog):
         self._data = DeviceItem(id_=self._data.item_id,
                                 name=self.ui.editName.text(),
                                 vendor=self.ui.comboVendor.currentData(const.RoleNodeId),
+                                devtype=self.ui.comboDevtype.currntData(const.RoleNodeId),
                                 desc=self.ui.editDesc.text(),
                                 spec=self.ui.textSpec.toPlainText(),
                                 tags="",
                                 origin=origin)
 
+        # make subst list for mapping info
         self._substList = {self.substModel.data(self.substModel.index(row, 0), const.RoleNodeId).value()
                            for row in range(self.substModel.rowCount(QModelIndex()))}
 
+        # remove self from subst list
         if self._data.item_id in self._substList:
             self._substList.remove(self._data.item_id)
 
@@ -137,3 +149,16 @@ class DeviceEditor(QDialog):
             self.accept()
         else:
             return
+
+    def onBtnAddVendorClicked(self):
+        data, ok = QInputDialog.getText(self, "Добавить производителя", "Введите название:", QLineEdit.Normal, "")
+
+        if not ok:
+            return
+
+        data = data[0].upper() + data[1:]
+        # self._modelDomain.addDictRecord(self.dictList[self.ui.comboDict.currentIndex()][0], data)
+        print(data, ok)
+
+    def onBtnAddDevtypeClicked(self):
+        print("add devtype")

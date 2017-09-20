@@ -84,7 +84,7 @@ class MainWindow(QMainWindow):
         self.ui.treeDeviceList.setUniformRowHeights(True)
         self.ui.treeDeviceList.header().setHighlightSections(False)
         self.ui.treeDeviceList.header().setStretchLastSection(True)
-        self.ui.treeDeviceList.setColumnHidden(5, True)
+        # self.ui.treeDeviceList.setColumnHidden(5, True)
 
         # setup filter widgets
         self.ui.comboVendorFilter.setModel(self._modelDomain.vendorMapModel)
@@ -108,6 +108,8 @@ class MainWindow(QMainWindow):
         self.ui.comboVendorFilter.currentIndexChanged.connect(self.setSearchFilter)
         self.ui.editSearch.textChanged.connect(self.setSearchFilter)
 
+        # UI modifications
+        self.ui.btnDictEditor.setVisible(False)
         # self.setSearchFilter()
 
     def initActions(self):
@@ -134,9 +136,10 @@ class MainWindow(QMainWindow):
         self.ui.treeDeviceList.setColumnWidth(0, tdwidth * 0.15)
         self.ui.treeDeviceList.setColumnWidth(1, tdwidth * 0.05)
         self.ui.treeDeviceList.setColumnWidth(2, tdwidth * 0.10)
-        self.ui.treeDeviceList.setColumnWidth(3, tdwidth * 0.25)
-        self.ui.treeDeviceList.setColumnWidth(4, tdwidth * 0.30)
-        self.ui.treeDeviceList.setColumnWidth(5, tdwidth * 0.15)
+        self.ui.treeDeviceList.setColumnWidth(3, tdwidth * 0.10)
+        self.ui.treeDeviceList.setColumnWidth(4, tdwidth * 0.20)
+        self.ui.treeDeviceList.setColumnWidth(5, tdwidth * 0.25)
+        self.ui.treeDeviceList.setColumnWidth(6, tdwidth * 0.15)
 
     def updateItemInfo(self, index):
         self.ui.textDeviceInfo.setPlainText(self._uiFacade.requestItemInfo(index))
@@ -184,7 +187,7 @@ class MainWindow(QMainWindow):
     #     super(MainWindow, self).closeEvent(*args, **kwargs)
 
     # action processing
-    # send user commands to the ui facade: (command, parameters (like indexes, etc.))
+    # send user commands to the ui facade: (command, parameters (indexes, etc.))
     def procActRefresh(self):
         # print("act refresh triggered")
         # self._uiFacade.requestRefresh()

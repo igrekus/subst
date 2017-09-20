@@ -37,12 +37,13 @@ class DeviceListModel(QAbstractItemModel):
     ColumnId = 0
     ColumnName = ColumnId + 1
     ColumnVendor = ColumnName + 1
-    ColumnDescription = ColumnVendor + 1
+    ColumnDevtype = ColumnVendor + 1
+    ColumnDescription = ColumnDevtype + 1
     ColumnSpec = ColumnDescription + 1
     ColumnTags = ColumnSpec + 1
     ColumnCount = ColumnTags + 1
 
-    _headers = ["Каталог", "Индекс", "Производитель", "Описание", "Характеристики", "Теги"]
+    _headers = ["Каталог", "Индекс", "Производитель", "Тип прибора", "Описание", "Характеристики", "Теги"]
 
     def __init__(self, parent=None, domainModel=None):
         super(DeviceListModel, self).__init__(parent)
@@ -157,6 +158,8 @@ class DeviceListModel(QAbstractItemModel):
                 return QVariant(item.item_id)
             elif col == self.ColumnVendor:
                 return QVariant(self._modelDomain.getVendorById(item.item_vendor)[0])
+            elif col == self.ColumnDevtype:
+                return QVariant(self._modelDomain.getDevtypeById(item.item_devtype))
             elif col == self.ColumnDescription:
                 return QVariant(item.item_desc)
             elif col == self.ColumnSpec:

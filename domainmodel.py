@@ -22,9 +22,11 @@ class DomainModel(QObject):
         self.substMap = dict()
 
         self.vendorList = dict()
+        self.devtypeList = dict()
 
         self.deviceMapModel = None
         self.vendorMapModel = None
+        self.devtypeMapModel = None
 
     def buildDeviceMapModel(self):
         self.deviceMapModel = MapModel(self, {k: v.item_name for k, v in self.deviceList.items()})
@@ -33,16 +35,22 @@ class DomainModel(QObject):
         self.vendorMapModel = MapModel(self, {k: v[0] for k, v in self.vendorList.items()})
         self.vendorMapModel.addItemAtPosition(0, 0, "Все")
 
+    def buildDevtypeMapModel(self):
+        self.devtypeMapModel = MapModel(self, self.devtypeList)
+        self.devtypeMapModel.addItemAtPosition(0, 0, "Все")
+
     def buildMapModels(self):
         print("building map models")
         self.buildDeviceMapModel()
         self.builVendorMapModel()
+        self.buildDevtypeMapModel()
 
     def initModel(self):
         print("init domain model")
-        self.deviceList = self._persistenceFacade.getDeviceList()
-        self.substMap = self._persistenceFacade.getSubstMap()
+        self.deviceList = self._persistenceFacade.getDeviceDict()
         self.vendorList = self._persistenceFacade.getVendorDict()
+        self.devtypeList = self._persistenceFacade.getDevtypeDict()
+        self.substMap = self._persistenceFacade.getSubstMap()
         self.buildMapModels()
 
     def getItemById(self, id_):
@@ -54,6 +62,9 @@ class DomainModel(QObject):
         :return: list(name: str, origin: int) 
         """
         return self.vendorList[id_]
+
+    def getDevtypeById(self, id_):
+        return self.devtypeList[id_]
 
     def addDeviceItem(self, item: DeviceItem, mapping: set):
         print("domain model add device item call:", item)

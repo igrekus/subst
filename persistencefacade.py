@@ -16,7 +16,7 @@ class PersistenceFacade(QObject):
     def initFacade(self):
         print("init persistence facade:", self._engine.engineType)
 
-    def getDeviceList(self):
+    def getDeviceDict(self):
         return {r[0]: DeviceItem.fromSqlTuple(r) for r in self._engine.fetchDeviceList()}
 
     def getSubstMap(self):
@@ -29,6 +29,9 @@ class PersistenceFacade(QObject):
 
     def getVendorDict(self):
         return {v[0]: [v[1], v[2]] for v in self._engine.fetchVendorList()}
+
+    def getDevtypeDict(self):
+        return {v[0]: v[1] for v in self._engine.fetchDevtypeList()}
 
     def insertDeviceItem(self, item: DeviceItem, mapping: set):
         print("persistence facade insert device item call:", item, mapping)

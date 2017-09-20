@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
      <item>
       <widget class="QGroupBox" name="grpSpec">
        <property name="title">
@@ -47,7 +47,65 @@
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="comboVendor"/>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QComboBox" name="comboVendor">
+            <property name="toolTip">
+             <string>Выберите производителя</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnAddVendor">
+            <property name="maximumSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Добавить производителя...</string>
+            </property>
+            <property name="text">
+             <string>+</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="lblDevtype">
+          <property name="text">
+           <string>Тип устройства:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QComboBox" name="comboDevtype">
+            <property name="toolTip">
+             <string>Выберите тип устройства</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnAddDevtype">
+            <property name="maximumSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Добавить тип устройства...</string>
+            </property>
+            <property name="text">
+             <string>+</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="QLabel" name="lblDesc">
@@ -182,6 +240,9 @@
       <widget class="QPushButton" name="btnOk">
        <property name="text">
         <string>Сохранить</string>
+       </property>
+       <property name="default">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

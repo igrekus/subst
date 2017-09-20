@@ -29,6 +29,7 @@ class UiFacade(QObject):
         item: DeviceItem = self._domainModel.getItemById(index.data(const.RoleNodeId))
         return "Наименование:\n" + item.item_name + \
                "\n\nПроизводитель:\n" + self._domainModel.getVendorById(item.item_vendor)[0] + \
+               "\n\nТип устройства:\n" + self._domainModel.getDevtypeById(item.item_devtype) + \
                "\n\nОписание:\n" + item.item_desc + \
                "\n\nПараметры:\n" + item.item_spec
 
