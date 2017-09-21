@@ -17,7 +17,7 @@ class DictEditor(QDialog):
         # ui
         self.ui = uic.loadUi("dicteditor.ui", self)
 
-        # instance variavles
+        # instance variables
         self._modelDomain = domainModel
         self.dictList = {0: ["vendor", self._modelDomain.vendorMapModel]}
 

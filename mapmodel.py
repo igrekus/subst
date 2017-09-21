@@ -18,10 +18,12 @@ class MapModel(QAbstractListModel):
         count = len(data.values()) - 1
         if count < 0:
             count = 0
+        # self.beginResetModel()
         self.beginInsertRows(QModelIndex(), 0, count)
         self.mapData = data
         self.strList = list(sorted(self.mapData.values()))
         self.endInsertRows()
+        # self.endResetModel()
 
     def copyItems(self, model: dict):
         self.beginResetModel()

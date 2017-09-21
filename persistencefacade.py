@@ -69,6 +69,10 @@ class PersistenceFacade(QObject):
         self._engine.deleteDeviceRecord(item.toTuple())
         self.updateAffectedMaps(affected_maps)
 
+    def addVendorRecord(self, data: list):
+        print("persistence facade add vendor record:", data)
+        return self._engine.insertVendorRecord(data)
+
     def addDictRecord(self, dictName, data):
         print("persistence facade add dict record:", dictName, data)
         return self._engine.insertDictRecord(dictName, (data, ))

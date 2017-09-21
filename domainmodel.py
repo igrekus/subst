@@ -121,12 +121,23 @@ class DomainModel(QObject):
 
         self.deviceRemoved.emit(item.item_id)
 
+    def addVendorRecord(self, data):
+        print("domain model add vendor record call", data)
+        newId = self._persistenceFacade.addVendorRecord(data)
+
+        self.vendorList[newId] = data[0]
+        self.vendorMapModel.addItem(newId, data[0])
+
+        print(self.vendorList)
+
     def addDictRecord(self, dictName, data):
         print("domain model add dict record:", dictName, data)
         newId = self._persistenceFacade.addDictRecord(dictName, data)
 
         if dictName == "vendor":
             self.vendorMapModel.addItem(newId, data)
+        elif dictName == "devtype":
+            self.devtypeMapModel.addItem(newId, data)
 
     def editDictRecord(self, dictName, data):
         print("domain model edit dict record:", dictName, data)
@@ -134,6 +145,8 @@ class DomainModel(QObject):
 
         if dictName == "vendor":
             self.vendorMapModel.updateItem(data[0], data[1])
+        elif dictName == "devtype":
+            self.devtypeMapModel.updateItem(data[0], data[1])
 
     def deleteDictRecord(self, dictName, data):
         print("domain model delete dict record:", dictName, data)
@@ -142,6 +155,8 @@ class DomainModel(QObject):
             self._persistenceFacade.deleteDictRecord(dictName, data)
 
             if dictName == "vendor":
+                self.vendorMapModel.removeItem(data)
+            elif dictName == "devtype":
                 self.vendorMapModel.removeItem(data)
             return True
         return False

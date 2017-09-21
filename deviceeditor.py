@@ -1,11 +1,12 @@
 import const
-from copy import copy
 from PyQt5 import uic
-from PyQt5.QtWidgets import QDialog, QMessageBox, QInputDialog, QLineEdit
-from PyQt5.QtCore import Qt, QModelIndex, QVariant
+from PyQt5.QtWidgets import QDialog, QMessageBox, QLineEdit, QInputDialog, QRadioButton
+from PyQt5.QtCore import Qt, QModelIndex
 
 from deviceitem import DeviceItem
+from dlgsubstlist import DlgSubstList
 from mapmodel import MapModel
+from inputdialog import InputDialog
 
 
 class DeviceEditor(QDialog):
@@ -22,6 +23,7 @@ class DeviceEditor(QDialog):
         # instance variables
         self._modelDomain = domainModel
         self.substModel = MapModel(self, {m: self._modelDomain.deviceMapModel.getData(m) for m in mapping})
+        self.filteredVendorModel = MapModel(self, {k: v[0] for k, v in self._modelDomain.vendorList.items()})
 
         self._data = data
         self._substList = list()
@@ -33,9 +35,11 @@ class DeviceEditor(QDialog):
         self.ui.btnRemoveSubst.clicked.connect(self.onBtnRemoveSubstClicked)
         self.ui.btnAddVendor.clicked.connect(self.onBtnAddVendorClicked)
         self.ui.btnAddDevtype.clicked.connect(self.onBtnAddDevtypeClicked)
+        self.ui.radioImport.toggled.connect(self.onRadioStatusChange)
+        self.ui.radioHomebrew.toggled.connect(self.onRadioStatusChange)
 
     def initDialog(self):
-        self.ui.comboVendor.setModel(self._modelDomain.vendorMapModel)
+        self.ui.comboVendor.setModel(self.filteredVendorModel)
         self.ui.comboDevtype.setModel(self._modelDomain.devtypeMapModel)
         self.ui.listSubst.setModel(self.substModel)
 
@@ -64,15 +68,22 @@ class DeviceEditor(QDialog):
         elif self._data.item_origin == 2:
             self.ui.radioHomebrew.setChecked(True)
 
+    def filterVendorModel(self, imported):
+        self.filteredVendorModel.clear()
+        self.filteredVendorModel.initModel(
+            {k: v[0] for k, v in self._modelDomain.vendorList.items() if v[1] == int(not imported) + 1})
+
     def onBtnAddSubstClicked(self):
-        print("add subst")
-        txt, ok = QInputDialog.getItem(self, "Добавить аналог", "Приборы:",
-                                       self._modelDomain.deviceMapModel.strList, 0, False)
-
-        if not ok:
-            return
-
-        self.substModel.addItem(self._modelDomain.deviceMapModel.getId(txt), txt)
+        dialog = DlgSubstList()
+        dialog.exec()
+        # print("add subst")
+        # txt, ok = QInputDialog.getItem(self, "Добавить аналог", "Приборы:",
+        #                                self._modelDomain.deviceMapModel.strList, 0, False)
+        #
+        # if not ok:
+        #     return
+        #
+        # self.substModel.addItem(self._modelDomain.deviceMapModel.getId(txt), txt)
 
     def onBtnRemoveSubstClicked(self):
         if not self.ui.listSubst.selectionModel().hasSelection():
@@ -87,6 +98,38 @@ class DeviceEditor(QDialog):
             return
 
         self.substModel.removeItem(self.ui.listSubst.selectionModel().currentIndex().data(const.RoleNodeId))
+
+    def onBtnAddVendorClicked(self):
+        dialog = InputDialog(parent=self, title="Введите информацию о производителе",
+                             widgetList=[QLineEdit, QRadioButton, QRadioButton],
+                             widgetTitleList=["Название:", "Импортный", "Отечественный"],
+                             widgetDataList=["", True, False])
+        if dialog.exec() != QDialog.Accepted:
+            return
+
+        data = dialog.getData()
+        self._modelDomain.addVendorRecord([data[0], int(data[2]) + 1])
+        self.filterVendorModel(data[1])
+
+    def onBtnAddDevtypeClicked(self):
+        dialog = InputDialog(parent=self, title="Введите информацию о типе устройства",
+                             widgetList=[QLineEdit],
+                             widgetTitleList=["Название:"],
+                             widgetDataList=[""])
+        if dialog.exec() != QDialog.Accepted:
+            return
+
+        self._modelDomain.addDictRecord("devtype", dialog.getData()[0])
+
+    def onRadioStatusChange(self, dummy):
+        self.filterVendorModel(self.ui.radioImport.isChecked())
+
+    def onBtnOkClicked(self):
+        if self.verifyInput():
+            self.collectData()
+            self.accept()
+        else:
+            return
 
     def verifyInput(self):
         print("verifying user input")
@@ -142,23 +185,3 @@ class DeviceEditor(QDialog):
 
     def getData(self):
         return self._data, self._substList
-
-    def onBtnOkClicked(self):
-        if self.verifyInput():
-            self.collectData()
-            self.accept()
-        else:
-            return
-
-    def onBtnAddVendorClicked(self):
-        data, ok = QInputDialog.getText(self, "Добавить производителя", "Введите название:", QLineEdit.Normal, "")
-
-        if not ok:
-            return
-
-        data = data[0].upper() + data[1:]
-        # self._modelDomain.addDictRecord(self.dictList[self.ui.comboDict.currentIndex()][0], data)
-        print(data, ok)
-
-    def onBtnAddDevtypeClicked(self):
-        print("add devtype")

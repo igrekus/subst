@@ -121,6 +121,14 @@ class MysqlEngine(QObject):
         q = "CALL deleteDevice(%s)"
         self.execParametrizedQuery(q, item[-1])
 
+    def insertVendorRecord(self, data: list):
+        print("mysql engine insert vendor record", data)
+        q = "CALL insertVendorRecord(%s, %s)"
+        # print(q, data)
+        cursor = self.execParametrizedQuery(q, data)
+        rec_id = cursor.fetchone()[0]
+        return rec_id
+
     def insertDictRecord(self, dictName, data):
         print("mysql engine insert dict record:", dictName, data)
         with self._connection:
