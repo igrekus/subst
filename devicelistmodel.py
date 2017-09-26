@@ -199,6 +199,9 @@ class DeviceListModel(QAbstractItemModel):
         elif role == const.RoleVendor:
             return QVariant(item.item_vendor)
 
+        elif role == const.RoleDevtype:
+            return QVariant(item.item_devtype)
+
         return QVariant()
 
     # def flags(self, index):

@@ -1,10 +1,11 @@
 import const
 from PyQt5 import uic
-from PyQt5.QtWidgets import QDialog, QMessageBox, QLineEdit, QInputDialog, QRadioButton
+from PyQt5.QtWidgets import QDialog, QMessageBox, QLineEdit, QRadioButton
 from PyQt5.QtCore import Qt, QModelIndex
 
 from deviceitem import DeviceItem
 from dlgsubstlist import DlgSubstList
+from domainmodel import DomainModel
 from mapmodel import MapModel
 from inputdialog import InputDialog
 
@@ -21,12 +22,12 @@ class DeviceEditor(QDialog):
         self.ui = uic.loadUi("deviceeditor.ui", self)
 
         # instance variables
-        self._modelDomain = domainModel
+        self._modelDomain: DomainModel = domainModel
         self.substModel = MapModel(self, {m: self._modelDomain.deviceMapModel.getData(m) for m in mapping})
         self.filteredVendorModel = MapModel(self, {k: v[0] for k, v in self._modelDomain.vendorList.items()})
 
         self._data = data
-        self._substList = list()
+        self._substList = set()
 
         self.initDialog()
 
@@ -74,16 +75,14 @@ class DeviceEditor(QDialog):
             {k: v[0] for k, v in self._modelDomain.vendorList.items() if v[1] == int(not imported) + 1})
 
     def onBtnAddSubstClicked(self):
-        dialog = DlgSubstList()
-        dialog.exec()
-        # print("add subst")
-        # txt, ok = QInputDialog.getItem(self, "Добавить аналог", "Приборы:",
-        #                                self._modelDomain.deviceMapModel.strList, 0, False)
-        #
-        # if not ok:
-        #     return
-        #
-        # self.substModel.addItem(self._modelDomain.deviceMapModel.getId(txt), txt)
+        origin = int(self.ui.radioImport.isChecked()) + 1
+        dialog = DlgSubstList(deviceModel=self._modelDomain.buildDeviceMapModel(origin=origin))
+
+        if dialog.exec() != QDialog.Accepted:
+            return
+
+        for d in dialog.getData():
+            self.substModel.addItem(d[0], d[1])
 
     def onBtnRemoveSubstClicked(self):
         if not self.ui.listSubst.selectionModel().hasSelection():
@@ -175,7 +174,7 @@ class DeviceEditor(QDialog):
                                 tags="",
                                 origin=origin)
 
-        # make subst list for mapping info
+        # make subst set for mapping info
         self._substList = {self.substModel.data(self.substModel.index(row, 0), const.RoleNodeId).value()
                            for row in range(self.substModel.rowCount(QModelIndex()))}
 

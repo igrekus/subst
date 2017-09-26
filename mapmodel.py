@@ -89,10 +89,15 @@ class MapModel(QAbstractListModel):
             return QVariant
 
         row = index.row()
+
         if role == Qt.DisplayRole or role == Qt.ToolTipRole:
-            return QVariant(self.strList[row])
+            if index.column() == 0:
+                return QVariant(self.strList[row])
+
         elif role == const.RoleNodeId:
             return QVariant(self.getId(self.strList[row]))
+
+        return QVariant()
 
     def getId(self, search_str=""):
         for i, string in self.mapData.items():

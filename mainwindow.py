@@ -88,6 +88,7 @@ class MainWindow(QMainWindow):
 
         # setup filter widgets
         self.ui.comboVendorFilter.setModel(self._modelDomain.vendorMapModel)
+        self.ui.comboDevtypeFilter.setModel(self._modelDomain.devtypeMapModel)
 
         # create actions
         self.initActions()
@@ -106,6 +107,7 @@ class MainWindow(QMainWindow):
 
         # search widgets
         self.ui.comboVendorFilter.currentIndexChanged.connect(self.setSearchFilter)
+        self.ui.comboDevtypeFilter.currentIndexChanged.connect(self.setSearchFilter)
         self.ui.editSearch.textChanged.connect(self.setSearchFilter)
 
         # UI modifications
@@ -168,15 +170,16 @@ class MainWindow(QMainWindow):
         self.updateItemInfo(sourceIndex)
 
     def onTreeDoubleClicked(self, index):
-        if index.column() != 0:
-            self.actDeviceEdit.trigger()
+        # if index.column() != 0:
+        self.actDeviceEdit.trigger()
 
     def setSearchFilter(self, dummy=0):
         self._modelSearchProxy.filterString = self.ui.editSearch.text()
         self._modelSearchProxy.filterVendor = self.ui.comboVendorFilter.currentData(const.RoleNodeId)
+        self._modelSearchProxy.filterDevtype = self.ui.comboDevtypeFilter.currentData(const.RoleNodeId)
 
         self._modelSearchProxy.invalidate()
-        self.ui.treeDeviceList.setColumnHidden(5, True)
+        # self.ui.treeDeviceList.setColumnHidden(5, True)
 
     # misc events
     def resizeEvent(self, event):

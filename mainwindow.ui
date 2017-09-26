@@ -32,7 +32,31 @@
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="comboVendorFilter"/>
+       <widget class="QComboBox" name="comboVendorFilter">
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>20</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lblDevtype">
+        <property name="text">
+         <string>Тип прибора:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboDevtypeFilter">
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+        </property>
+        <property name="minimumContentsLength">
+         <number>20</number>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
@@ -70,6 +94,18 @@
         <width>16777215</width>
         <height>16777215</height>
        </size>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Sunken</enum>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::EditKeyPressed</set>
+      </property>
+      <property name="rootIsDecorated">
+       <bool>true</bool>
+      </property>
+      <property name="expandsOnDoubleClick">
+       <bool>false</bool>
       </property>
      </widget>
     </item>
@@ -143,6 +179,9 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="acceptDrops">
+          <bool>false</bool>
          </property>
          <property name="readOnly">
           <bool>true</bool>

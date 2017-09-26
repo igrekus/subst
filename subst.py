@@ -7,6 +7,7 @@ setOutDir(__name__)
 
 def main():
     app = QApplication(sys.argv)
+    # app.setStyle("macintosh")
     w = MainWindow()
     w.initApp()
     # w.showMaximized()

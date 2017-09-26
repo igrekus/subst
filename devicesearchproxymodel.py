@@ -8,6 +8,7 @@ class DeviceSearchProxyModel(QSortFilterProxyModel):
         super(DeviceSearchProxyModel, self).__init__(parent)
 
         self.filterVendor = 0
+        self.filterDevtype = 0
         self._filterString = ""
         self._filterRegex = re.compile(self._filterString, flags=re.IGNORECASE)
 
@@ -25,11 +26,13 @@ class DeviceSearchProxyModel(QSortFilterProxyModel):
 
     def filterAcceptsSelf(self, row, parent_index):
         vendor = self.sourceModel().index(row, 0, parent_index).data(const.RoleVendor)
+        devtype = self.sourceModel().index(row, 0, parent_index).data(const.RoleDevtype)
         if self.filterVendor == 0 or self.filterVendor == vendor:
-            for i in range(self.sourceModel().columnCount()):
-                string = str(self.sourceModel().index(row, i, parent_index).data(Qt.DisplayRole))
-                if self._filterRegex.findall(string):
-                    return True
+            if self.filterDevtype == 0 or self.filterDevtype == devtype:
+                for i in range(self.sourceModel().columnCount()):
+                    string = str(self.sourceModel().index(row, i, parent_index).data(Qt.DisplayRole))
+                    if self._filterRegex.findall(string):
+                        return True
         return False
 
     def filterAcceptsAnyParent(self, parent_index):

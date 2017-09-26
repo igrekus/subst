@@ -28,8 +28,12 @@ class DomainModel(QObject):
         self.vendorMapModel = None
         self.devtypeMapModel = None
 
-    def buildDeviceMapModel(self):
-        self.deviceMapModel = MapModel(self, {k: v.item_name for k, v in self.deviceList.items()})
+    def buildDeviceMapModel(self, origin: int):
+        if origin == 0:   # all devices
+            return MapModel(self, {k: v.item_name for k, v in self.deviceList.items()})
+        else:
+            # 1 = import, 2 = homebrew
+            return MapModel(self, {k: v.item_name for k, v in self.deviceList.items() if v.item_origin == origin})
 
     def builVendorMapModel(self):
         self.vendorMapModel = MapModel(self, {k: v[0] for k, v in self.vendorList.items()})
@@ -41,7 +45,7 @@ class DomainModel(QObject):
 
     def buildMapModels(self):
         print("building map models")
-        self.buildDeviceMapModel()
+        self.deviceMapModel = self.buildDeviceMapModel(origin=0)
         self.builVendorMapModel()
         self.buildDevtypeMapModel()
 

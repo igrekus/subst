@@ -16,3 +16,4 @@ COLOR_ARRIVAL_RECLAIM = 0xffFF6767
 
 RoleNodeId = Qt.UserRole + 1
 RoleVendor = RoleNodeId + 1
+RoleDevtype = RoleVendor + 1
